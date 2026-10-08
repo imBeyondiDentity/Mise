@@ -56,7 +56,7 @@ LICENSE        MIT
 3. В *Build and deployment* выбери *Deploy from a branch*, ветка `main`, папка `/ (root)`.
 4. Через минуту сайт заработает по адресу `https://<username>.github.io/MiSE/`.
 
-Ссылка «← iDentity» справа внизу ведёт на `../`. Если страница лежит в другом месте, поменяй `href` у `#backLink`.
+Чип «Github» справа внизу открывает репозиторий (`https://github.com/imBeyondiDentity/MiSE`). Если репозиторий лежит в другом месте, поменяй `href` у `#backLink`.
 
 ## Ограничения
 

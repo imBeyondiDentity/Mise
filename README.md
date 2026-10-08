@@ -56,7 +56,7 @@ Open `index.html` in any modern browser. No build step, no dependencies. The fon
 3. Under *Build and deployment* choose *Deploy from a branch*, branch `main`, folder `/ (root)`.
 4. After a minute the site is live at `https://<username>.github.io/MiSE/`.
 
-The "← iDentity" link in the bottom-right corner points to `../`. Change the `href` of `#backLink` if the page lives elsewhere.
+The "Github" chip in the bottom-right corner opens the repository (`https://github.com/imBeyondiDentity/MiSE`). Change the `href` of `#backLink` if the repository lives elsewhere.
 
 ## Limitations
 
