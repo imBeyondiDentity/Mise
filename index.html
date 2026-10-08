@@ -1,0 +1,1291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MiSE</title>
+<meta name="description" content="Rules-engine prompt compiler for Seedance 2.0 and 2.5. RU/EN. Runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0d0c;--card:#151412;--card2:#1b1917;--line:#2a2724;--text:#ece7e1;--mute:#8d867e;
+  --acc:#ff6a1a;--acc-d:#c9500f;--ok:#6fcf97;--warn:#f2c94c;--err:#eb5757;--info:#7aa2f7;
+  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--mono);-webkit-font-smoothing:antialiased;padding-bottom:84px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+header{padding:56px 0 20px;text-align:center}
+.kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
+h1{font:700 clamp(36px,7vw,68px)/1.05 var(--serif);margin:0 0 30px;letter-spacing:-.01em}
+.sub{max-width:720px;color:var(--mute);margin:0 0 26px;font-size:13.5px}
+.lang{position:fixed;top:14px;right:14px;z-index:20;display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
+.lang button{all:unset;cursor:pointer;font-size:11px;letter-spacing:.1em;padding:5px 12px;border-radius:999px;color:var(--mute)}
+.lang button[aria-pressed=true]{background:var(--acc);color:#120a04;font-weight:700}
+.bar{justify-content:center;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{all:unset;cursor:pointer;padding:9px 18px;font-size:13px;color:var(--mute);transition:.15s}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--acc);color:#120a04;font-weight:700}
+.lbl{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-right:10px}
+.tabs{display:flex;gap:4px;overflow-x:auto;max-width:100%}
+.tabs button{all:unset;cursor:pointer;padding:8px 14px;font-size:12.5px;color:var(--mute);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button:hover{color:var(--text)}
+.tabs button[aria-pressed=true]{color:var(--acc);border-bottom-color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr;gap:18px;padding:22px 0}
+@media(min-width:980px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:22px}.sticky{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);overflow:auto}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+label{display:block;font-size:11.5px;color:var(--mute);margin:12px 0 5px}
+label:first-of-type{margin-top:0}
+textarea,input[type=text],input[type=number],select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:13px/1.5 var(--mono);outline:none;transition:border-color .15s}
+textarea{resize:vertical;min-height:110px}
+textarea:focus,input:focus,select:focus{border-color:var(--acc)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.row3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.dur{display:grid;grid-template-columns:1fr 78px;gap:12px;align-items:center}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:999px;padding:5px 11px;font-size:11.5px;text-decoration:none}
+button.chip{cursor:pointer;font-family:var(--mono)}
+button.chip:hover,a.chip:hover{border-color:var(--acc);color:var(--acc)}
+.chip b{color:var(--acc);font-weight:600}
+.chip.dim{color:var(--mute)}
+.btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 15px;border-radius:9px;background:var(--acc);color:#120a04;font:700 12.5px var(--mono);transition:.15s}
+.btn:hover{background:#ff8340}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);font-weight:500}
+.btn.ghost:hover{border-color:var(--acc);color:var(--acc)}
+.btn.sm{padding:6px 11px;font-size:11.5px}
+.btn:focus-visible,.seg button:focus-visible,.tabs button:focus-visible,.lang button:focus-visible,.chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chk{display:flex;gap:9px;align-items:flex-start;margin:10px 0 0;color:var(--text);font-size:12.5px;cursor:pointer}
+.chk input{margin-top:3px;accent-color:var(--acc)}
+.ref{display:grid;grid-template-columns:70px minmax(130px,1.1fr) minmax(0,1.3fr) 32px;gap:8px;align-items:center;margin-bottom:8px}
+.ref .tok{font-size:11.5px;color:var(--acc)}
+.ref .x{all:unset;cursor:pointer;color:var(--mute);text-align:center;font-size:18px;line-height:1}
+.ref .x:hover{color:var(--err)}
+@media(max-width:560px){.ref{grid-template-columns:62px 1fr 28px}.ref input{grid-column:1/-1;grid-row:2}.row{grid-template-columns:1fr}}
+.hint{font-size:11.5px;color:var(--mute);margin:8px 0 0}
+pre.out{margin:0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.65 var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;max-height:560px;overflow:auto;user-select:text}
+.stats{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--mute);margin:10px 0 6px;flex-wrap:wrap}
+.meter{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--acc);transition:width .2s}
+.meter.over i{background:var(--err)}
+.tl{display:flex;gap:3px;height:54px;margin-bottom:14px}
+.tl div{background:linear-gradient(180deg,rgba(255,106,26,.28),rgba(255,106,26,.12));border:1px solid rgba(255,106,26,.45);border-radius:7px;padding:5px 7px;min-width:0;overflow:hidden;font-size:10.5px;line-height:1.3}
+.tl b{display:block;color:var(--acc)}
+.tl span{color:var(--mute);white-space:nowrap;text-overflow:ellipsis;overflow:hidden;display:block}
+.shot{border-top:1px solid var(--line);padding:10px 0;font-size:12.5px}
+.shot .t{color:var(--acc);margin-right:8px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px}
+.list li:first-child{border-top:0}
+.dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--info)}
+.dot.err{background:var(--err)}.dot.warn{background:var(--warn)}.dot.tip{background:var(--info)}.dot.info{background:var(--mute)}
+.score{font:700 12px var(--mono);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+.score.hi{color:var(--ok);border-color:var(--ok)}.score.mid{color:var(--warn);border-color:var(--warn)}.score.lo{color:var(--err);border-color:var(--err)}
+.empty{color:var(--mute);font-size:13px;padding:22px 4px;text-align:center}
+.hist{display:grid;gap:10px}
+.hist .it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px}
+.hist .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--mute);align-items:center}
+.badge{border:1px solid var(--acc);color:var(--acc);border-radius:6px;padding:1px 7px;font-size:10.5px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--acc);color:#120a04;font-weight:700;font-size:12.5px;padding:9px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.back{position:fixed;right:16px;bottom:16px;z-index:10;background:var(--card);border:1px solid var(--line);color:var(--mute);text-decoration:none;font-size:12px;padding:8px 14px;border-radius:999px}
+.back:hover{color:var(--acc);border-color:var(--acc)}
+.foot{color:var(--mute);font-size:11.5px;padding:10px 0 30px;max-width:760px}
+[hidden]{display:none!important}
+::selection{background:var(--acc);color:#120a04}
+
+</style>
+</head>
+<body>
+<div class="lang" role="group" aria-label="Language">
+  <button type="button" data-l="en" aria-pressed="true">EN</button>
+  <button type="button" data-l="ru" aria-pressed="false">RU</button>
+</div>
+
+<main class="wrap">
+  <header>
+    <p class="kicker" data-t="kicker"></p>
+    <h1 id="title">MiSE</h1>
+    <div class="bar">
+      <div><span class="lbl" data-t="ver"></span>
+        <span class="seg" id="verSeg" role="group"><button type="button" data-v="2.0" aria-pressed="false">Seedance 2.0</button><button type="button" data-v="2.5" aria-pressed="true">Seedance 2.5</button></span>
+      </div>
+      <nav class="tabs" id="modeTabs">
+        <button type="button" data-m="compile" aria-pressed="true" data-t="tab_compile"></button>
+        <button type="button" data-m="improve" aria-pressed="false" data-t="tab_improve"></button>
+        <button type="button" data-m="history" aria-pressed="false" data-t="tab_hist"></button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- COMPILE -->
+  <section id="pane-compile" class="grid">
+    <div class="col">
+      <div class="card">
+        <h2><span data-t="c_brief"></span></h2>
+        <label for="desc" data-t="f_desc"></label>
+        <textarea id="desc" data-tp="ph_desc" spellcheck="false"></textarea>
+        <label data-t="ex"></label>
+        <div class="chips" id="examples"></div>
+        <div class="row" style="margin-top:14px">
+          <div><label for="durNum" data-t="f_dur"></label>
+            <div class="dur"><input type="range" id="dur" min="4" max="30" step="1" value="10"><input type="number" id="durNum" min="4" max="30" value="10"></div></div>
+          <div><label for="ratio" data-t="f_ratio"></label><select id="ratio"></select>
+            <input type="text" id="ratioCustom" placeholder="3:2" style="margin-top:8px" hidden></div>
+        </div>
+        <label for="arch" data-t="f_arch"></label><select id="arch"></select>
+      </div>
+
+      <div class="card">
+        <h2><span data-t="c_look"></span></h2>
+        <div class="row3">
+          <div><label for="detail" data-t="f_detail"></label><select id="detail"><option value="lean" data-t="d_lean"></option><option value="std" data-t="d_std" selected></option><option value="rich" data-t="d_rich"></option></select></div>
+          <div><label for="cons" data-t="f_cons"></label><select id="cons"><option value="1" data-t="k1"></option><option value="2" data-t="k2" selected></option><option value="3" data-t="k3"></option></select></div>
+          <div><label for="body" data-t="f_body"></label><select id="body"></select></div>
+          <div><label for="light" data-t="f_light"></label><select id="light"></select></div>
+          <div><label for="move" data-t="f_move"></label><select id="move"></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span data-t="c_refs"></span><span class="hint" id="refCount" style="margin:0"></span></h2>
+        <div id="refs"></div>
+        <button type="button" class="btn ghost sm" id="addRef" data-t="add_ref"></button>
+        <p class="hint" data-t="refs_hint"></p>
+      </div>
+
+      <div class="card">
+        <h2><span data-t="c_audio"></span></h2>
+        <div class="row">
+          <div><label for="music" data-t="f_music"></label><input type="text" id="music" data-tp="ph_music"></div>
+          <div><label for="sfx" data-t="f_sfx"></label><input type="text" id="sfx" data-tp="ph_sfx"></div>
+        </div>
+        <label for="dialogue" data-t="f_dlg"></label>
+        <textarea id="dialogue" style="min-height:64px" data-tp="ph_dlg"></textarea>
+        <label for="dlang" data-t="f_dlang"></label>
+        <select id="dlang"><option value="auto" data-t="dl_auto"></option><option value="en">English</option><option value="ru">Russian</option><option value="ruuk" data-t="dl_ruuk"></option><option value="zh">Mandarin Chinese</option><option value="es">Spanish</option><option value="de">German</option><option value="fr">French</option></select>
+        <label class="chk"><input type="checkbox" id="nosubs" checked><span data-t="o_nosubs"></span></label>
+        <label class="chk"><input type="checkbox" id="nobgm"><span data-t="o_nobgm"></span></label>
+        <label class="chk"><input type="checkbox" id="brackets" checked><span data-t="o_brackets"></span></label>
+      </div>
+
+      <div class="card">
+        <h2><span data-t="c_opts"></span></h2>
+        <label class="chk" id="timesWrap"><input type="checkbox" id="times" checked><span data-t="o_times"></span></label>
+        <label class="chk" id="endWrap"><input type="checkbox" id="endState" checked><span data-t="o_end"></span></label>
+        <label for="neg" data-t="f_neg"></label>
+        <input type="text" id="neg" data-tp="ph_neg">
+      </div>
+    </div>
+
+    <div class="col sticky">
+      <div class="card">
+        <h2><span data-t="c_und"></span></h2>
+        <div class="chips" id="understood"></div>
+      </div>
+
+      <div class="card">
+        <h2><nav class="tabs" id="outTabs" style="margin:-6px 0 -8px">
+          <button type="button" data-o="prompt" aria-pressed="true" data-t="o_prompt"></button>
+          <button type="button" data-o="tl" aria-pressed="false" data-t="o_tl"></button>
+          <button type="button" data-o="llm" aria-pressed="false" data-t="o_llm"></button>
+          <button type="button" data-o="json" aria-pressed="false" data-t="o_json"></button></nav></h2>
+        <div id="o-prompt"><pre class="out" id="outPrompt"></pre>
+          <div class="stats"><span id="stats"></span><span id="limit"></span></div><div class="meter" id="meter"><i></i></div></div>
+        <div id="o-tl" hidden><div class="tl" id="tlBar"></div><div id="tlList"></div></div>
+        <div id="o-llm" hidden><p class="hint" style="margin:0 0 10px" data-t="llm_hint"></p><pre class="out" id="outLlm"></pre></div>
+        <div id="o-json" hidden><pre class="out" id="outJson"></pre></div>
+        <div class="acts">
+          <button type="button" class="btn" id="bCopy" data-t="btn_copy"></button>
+          <button type="button" class="btn ghost" id="bTxt" data-t="btn_txt"></button>
+          <button type="button" class="btn ghost" id="bJson" data-t="btn_json"></button>
+          <button type="button" class="btn ghost" id="bLink" data-t="btn_link"></button>
+          <button type="button" class="btn ghost" id="bSave" data-t="btn_save"></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span data-t="c_audit"></span><span class="score" id="score"></span></h2>
+        <ul class="list" id="issues"></ul>
+      </div>
+      <div class="card" id="notesCard">
+        <h2><span data-t="c_notes"></span></h2>
+        <ul class="list" id="notes"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- IMPROVE -->
+  <section id="pane-improve" class="grid" hidden>
+    <div class="col">
+      <div class="card">
+        <h2><span data-t="imp_h"></span></h2>
+        <textarea id="impText" style="min-height:280px" data-tp="ph_imp" spellcheck="false"></textarea>
+        <label for="impDur" data-t="imp_dur"></label>
+        <input type="number" id="impDur" min="0" max="30" style="max-width:120px">
+        <div class="acts">
+          <button type="button" class="btn ghost" id="impStrip" data-t="imp_strip"></button>
+          <button type="button" class="btn ghost" id="impCons" data-t="imp_cons"></button>
+          <button type="button" class="btn" id="impCopy" data-t="btn_copy"></button>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card"><h2><span data-t="c_audit"></span><span class="score" id="impScore"></span></h2><ul class="list" id="impIssues"></ul></div>
+      <div class="card"><h2><span data-t="imp_llm"></span></h2><pre class="out" id="impMeta"></pre>
+        <div class="acts"><button type="button" class="btn ghost" id="impMetaCopy" data-t="btn_copy"></button></div></div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="pane-history" hidden style="padding:22px 0">
+    <div class="acts" style="margin:0 0 16px">
+      <label class="chk" style="margin:0"><input type="checkbox" id="favOnly"><span data-t="h_only_fav"></span></label>
+      <button type="button" class="btn ghost sm" id="histClear" data-t="h_clear"></button>
+    </div>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <p class="foot" data-t="foot"></p>
+</main>
+
+<a class="back" id="backLink" href="../" data-t="back"></a>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ===== RULES BASE: limits, roles, archetypes, light, camera, slop ===== */
+
+// Hard facts per version (official guides + community; chars = soft recommendation)
+const LIM = {
+  '2.0': { min: 4, max: 15, img: 9, vid: 3, aud: 3, total: 12, chars: 3500, maxShots: 5,
+           ratios: ['16:9', '9:16', '1:1', '4:3', '3:4', '21:9'] },
+  '2.5': { min: 4, max: 30, img: 30, vid: 10, aud: 10, total: 50, chars: 6000, maxShots: 10,
+           ratios: ['16:9', '9:16', '1:1', '4:3', '3:4', '21:9', '2:1', '5:2', '2:5'] }
+};
+
+// Reference roles. Each returns one complete sentence for the @-token.
+const ROLES = {
+  character: { kind: 'image', l: ['Character', 'Персонаж'],
+    f: (r, n) => `${r} as the character${n}: strict identity preservation, exact face, hairstyle and outfit, no morphing.` },
+  product:   { kind: 'image', l: ['Product', 'Продукт'],
+    f: (r, n) => `${r} as the product${n}: exact shape, colour, proportions and logo placement, no redesign.` },
+  scene:     { kind: 'image', l: ['Location', 'Локация'],
+    f: (r, n) => `${r} as the location reference${n}: keep the layout, architecture and key props.` },
+  prop:      { kind: 'image', l: ['Prop / object', 'Предмет'],
+    f: (r, n) => `${r} as a prop${n}: keep its exact shape and material.` },
+  style:     { kind: 'image', l: ['Style only', 'Только стиль'],
+    f: (r, n) => `${r} as a visual style reference only${n}: take palette, texture and lighting mood, do not copy its subject.` },
+  first:     { kind: 'image', l: ['First frame', 'Первый кадр'],
+    f: (r, n) => `${r} as the first frame${n}.` },
+  last:      { kind: 'image', l: ['Last frame', 'Последний кадр'],
+    f: (r, n) => `${r} as the last frame${n}; the motion must resolve into it.` },
+  vmotion:   { kind: 'video', l: ['Motion / camera only', 'Только движение/камера'],
+    f: (r, n) => `${r} as camera and motion reference only${n}: do not inherit its actor, clothing, background, captions or music.` },
+  vedit:     { kind: 'video', ver: '2.5', l: ['Source clip to edit', 'Клип для правки'],
+    f: (r, n) => `${r} is the source clip to edit${n}: keep everything unchanged except the requested change.` },
+  vextend:   { kind: 'video', ver: '2.5', l: ['Extend this clip', 'Продолжить клип'],
+    f: (r, n) => `${r}: extend from its final frame${n}, keeping the same subject, setting, lighting and motion direction.` },
+  music:     { kind: 'audio', l: ['Music', 'Музыка'],
+    f: (r, n) => `${r} as background music${n}: sync cuts and key actions to its beat, no other music.` },
+  voice:     { kind: 'audio', l: ['Voice', 'Голос'],
+    f: (r, n) => `${r} as the voice reference${n}: match timbre and pacing for the character's dialogue.` },
+  sfx:       { kind: 'audio', l: ['Sound effects', 'Звуковые эффекты'],
+    f: (r, n) => `${r} as the sound-effects reference${n}.` }
+};
+
+// Camera bodies and look blocks (anti-"plastic" vocabulary from the expensive-look reference)
+const BODY = {
+  arri:  'Shot on ARRI Alexa 35 with Cooke S4 lenses, 32mm T2.0',
+  red:   'Shot on RED V-Raptor with Sigma Cine Prime 40mm T1.5',
+  sony:  'Shot on Sony Venice 2 with Zeiss Supreme Prime 50mm T1.5',
+  ana:   'Shot on ARRI Alexa 35 with anamorphic lenses, 2.39:1 look, oval bokeh and horizontal flares',
+  phone: 'Shot on a modern smartphone, natural handheld framing',
+  none:  ''
+};
+const BLOCK = {
+  film:  'Kodak Vision3 500T grain, cinematic halation on highlights, Kodak 2383 print emulation',
+  depth: 'shallow depth of field, subject in tack-sharp focus, three distinct depth planes, volumetric haze',
+  micro: 'visible skin pores, backlit hair strands, floating dust motes, tactile surface imperfections'
+};
+const COLOR = {
+  teal:    'ARRI Log-C colour science, subtle teal shadows with warm orange midtones, lifted blacks',
+  neutral: 'naturalistic colour rendition, desaturated highlights, open shadow detail',
+  warm:    'warm amber practicals against cool window light, Kodak 2383 print LUT',
+  noir:    'desaturated warm amber grade, deep blacks, high contrast',
+  neon:    'saturated magenta and cyan neon against crushed blacks, controlled highlights',
+  natural: 'natural colour rendition, rich greens, cool highlights, fine grain',
+  clean:   'neutral premium colour grade, controlled specular highlights',
+  anime:   'limited painterly palette, soft gradients in the sky, clean line art'
+};
+
+// Physical light stacks (time of day -> weather -> genre)
+const LIGHT = {
+  dawn:          'pre-dawn exterior, sun at 3° elevation, 2800K warm orange-red glow, diffused skylight fill, ultra-long soft shadows pointing west, low contrast, ground-level haze',
+  morningGolden: 'morning golden hour, sun at 15° elevation, 3500K warm side key, long hard-edged shadows 4x object height, 12000K blue skylight fill, warm ground bounce',
+  noon:          'high noon, sun at 88° overhead, 6000K neutral white light, short hard shadows directly below subjects, deep shadow pools under eyes and chin',
+  overcast:      'overcast sky acting as a 180° softbox, 7200K cool grey ambient, no directional shadows, 1:3 lighting ratio, muted saturation',
+  eveningGolden: 'evening golden hour, sun at 10° above the western horizon, 3000K amber backlight, rim light on the subject, shadows 4x subject height stretching east with blue-purple skylight fill',
+  blueHour:      'blue hour, sun 5° below the horizon, 10000K deep blue ambient skylight, near-shadowless, warm 2700K practicals as accents, strong blue-orange split',
+  night:         'night exterior, sodium streetlights at 2100K amber with hard shadows under each lamp, deep shadow between the light pools, reflections on wet ground',
+  studio:        'studio, black environment, 5600K large softbox key at 45° horizontal and 40° elevation, 4:1 key-to-fill, rim light at 135° at 60% intensity, shadows falling to pure black',
+  intDay:        'interior daytime, large window at camera-left as a 6500K soft key, warm 2800K practical lamps at 10% intensity, soft wide shadows, warm wall bounce',
+  intNight:      'interior night, single 2700K floor lamp as key, hard shadows radiating from the lamp, 6500K television flicker as cool fill at 30°, mixed warm and cool zones, crushed blacks',
+  rain:          'heavy rain: wet surfaces with 65% specular reflectivity mirroring every light source, backlit silver rain streaks, splash crowns and puddle rings',
+  fog:           'dense fog: 25 m visibility, volumetric light beams, 6500K grey-white scatter, distant objects dissolving into haze, halos around lamps',
+  snow:          'snow: 85% albedo ground bounce, 7500K overcast key, near-zero shadow depth, soft blue shadows, snowfall as white bokeh',
+  heat:          'extreme heat: bleached 6000K overhead light, thermal shimmer above the ground, heat-haze distortion in the background, blown specular highlights on metal and glass',
+  noir:          'film noir lighting: single bare 3000K tungsten key at 75° camera-right and 50° above eye line, 16:1 key-to-fill, venetian-blind shadow bars, hard zero-penumbra edges',
+  cyber:         'cyberpunk night: magenta neon camera-right and cyan neon camera-left, wet asphalt doubling every neon source, harsh 4500K overhead LED, deep true-black zones',
+  horror:        'horror lighting: single flickering 3800K fluorescent with a green shift, source low at 30 cm creating upward shadows on faces, 1.5 stops underexposed, deep black corners',
+  romantic:      'romantic lighting: large 3500K softbox key at 30° above and 30° camera-left, 2:1 key-to-fill, 2900K backlight creating a warm hair rim, 2200K string-light bokeh, slight atmospheric haze',
+  documentary:   'natural available light only: mixed 2800K tungsten practicals and 6000K window light, no artificial fill, authentic uncontrolled shadow depth',
+  commercial:    'premium commercial lighting: large octabox key at 5600K, near-shadowless 1:1.3 key-to-fill, dual rim lights at 120° and 240°, clean thin rim highlight defining the silhouette, seamless background'
+};
+const LIGHT_NAMES = {
+  dawn: ['Dawn', 'Рассвет'], morningGolden: ['Morning golden hour', 'Утренний золотой час'], noon: ['High noon', 'Полдень'],
+  overcast: ['Overcast', 'Пасмурно'], eveningGolden: ['Evening golden hour', 'Закат'], blueHour: ['Blue hour', 'Синий час'],
+  night: ['Night exterior', 'Ночь, улица'], studio: ['Studio', 'Студия'], intDay: ['Interior, day', 'Интерьер, день'],
+  intNight: ['Interior, night', 'Интерьер, ночь'], noir: ['Film noir', 'Нуар'], cyber: ['Cyberpunk neon', 'Киберпанк, неон'],
+  horror: ['Horror', 'Хоррор'], romantic: ['Romantic', 'Романтика'], documentary: ['Documentary', 'Документальный'],
+  commercial: ['Premium commercial', 'Рекламный']
+};
+const WEATHER_NAMES = { rain: ['Rain', 'Дождь'], fog: ['Fog', 'Туман'], snow: ['Snow', 'Снег'], heat: ['Heat', 'Жара'] };
+
+// Camera moves: phrase + detection keywords (RU/EN) + display name
+const MOVES = {
+  orbit:    { p: 'slow orbit around the subject, eye level',   n: ['Orbit', 'Облёт'],        kw: ['облет', 'облёт', 'вокруг', 'орбит', 'orbit', 'круговой', 'arc shot'] },
+  dollyin:  { p: 'slow dolly in',                              n: ['Dolly in', 'Наезд'],     kw: ['наезд', 'приближ', 'dolly in', 'push in', 'push-in', 'zoom in', 'наплыв'] },
+  dollyout: { p: 'slow dolly out',                             n: ['Dolly out', 'Отъезд'],   kw: ['отъезд', 'отдал', 'dolly out', 'pull back', 'pull-back'] },
+  pan:      { p: 'slow pan',                                   n: ['Pan', 'Панорама'],       kw: ['панорам', 'pan right', 'pan left', 'pan across'] },
+  tilt:     { p: 'slow tilt up',                               n: ['Tilt', 'Тилт'],          kw: ['tilt', 'наклон камер'] },
+  crane:    { p: 'crane shot rising',                          n: ['Crane', 'Кран'],         kw: ['кран', 'crane', 'подъем камер', 'подъём камер'] },
+  handheld: { p: 'subtle handheld',                            n: ['Handheld', 'Ручная'],    kw: ['ручная', 'handheld', 'с рук', 'трясущ'] },
+  tracking: { p: 'smooth tracking shot following the subject', n: ['Tracking', 'Слежение'], kw: ['слежен', 'tracking', 'следует за', 'follow', 'сопровожд'] },
+  whip:     { p: 'whip pan',                                   n: ['Whip pan', 'Свайп'],     kw: ['whip', 'свайп', 'резкий поворот камер'] },
+  static:   { p: 'locked tripod, no camera movement',          n: ['Static', 'Статика'],     kw: ['статичн', 'locked', 'штатив', 'tripod', 'неподвижная камера'] },
+  aerial:   { p: 'aerial drone shot gliding forward',          n: ['Aerial', 'Дрон'],        kw: ['дрон', 'drone', 'aerial', 'птичьего полёта', 'птичьего полета'] },
+  pov:      { p: 'first-person POV, subtle handheld',          n: ['POV', 'От первого лица'], kw: ['от первого лица', 'pov', 'first-person'] }
+};
+
+// Archetypes (scene types). kw: word-start stems, RU + EN.
+const ARCH = [
+  { id: 'action', n: ['Action / epic', 'Экшен / эпик'], ratio: '21:9', body: 'arri', color: 'teal', light: 'eveningGolden',
+    kw: ['погон', 'взрыв', 'драк', 'бой', 'перестрел', 'экшн', 'экшен', 'битв', 'стрельб', 'схватк', 'chase', 'explosion', 'fight', 'battle', 'action', 'gunfight', 'crash', 'авари'],
+    look: ['body', 'film', 'depth', 'color', 'micro'],
+    sizes: ['Wide establishing shot', 'Medium shot', 'Extreme close-up', 'Wide shot'],
+    moves: ['unstabilised handheld push-in', 'tracking shot with subtle handheld', 'whip pan', 'crane pull-back'],
+    style: 'Hollywood epic, photorealistic, 35mm film look, heavy grain, motion blur, slightly desaturated. No 3D, no cartoon, no VFX look.',
+    cons: ['the frame is a clean rectangle: no dark corners, no vignette, no tunnel effect'],
+    tip: ['Action works best with one clear hit per shot; keep the slow-motion beat to one shot.', 'В экшене один чёткий удар на шот; slow-motion оставляй на один шот.'] },
+  { id: 'product', n: ['Product / ad', 'Продукт / реклама'], ratio: '9:16', body: 'sony', color: 'clean', light: 'commercial',
+    kw: ['товар', 'продукт', 'реклам', 'флакон', 'духи', 'парфюм', 'бутылк', 'кроссовк', 'часы', 'смартфон', 'телефон', 'упаковк', 'банк', 'напиток', 'косметик', 'крем', 'помад', 'product', 'advert', 'commercial', 'perfume', 'sneaker', 'watch', 'bottle', 'packshot', 'unboxing'],
+    look: ['body', 'depth', 'color'],
+    sizes: ['Macro close-up', 'Medium product shot', 'Hero close-up'],
+    moves: ['slow dolly in', 'slow orbit 90 degrees', 'locked tripod'],
+    style: 'premium commercial, clean surfaces, no clutter.',
+    cons: ['no texture crawl', 'no jitter', 'physically correct reflections', 'logos and text stay sharp and unchanged'],
+    tip: ['Attach a product photo as @Image with the "Product" role: it locks shape and logo.', 'Прикрепи фото продукта как @Image с ролью «Продукт»: так фиксируются форма и логотип.'] },
+  { id: 'ugc', n: ['UGC / realism', 'UGC / реализм'], ratio: '9:16', body: 'phone', color: 'neutral', light: 'intDay',
+    kw: ['ugc', 'отзыв', 'влог', 'селфи', 'говорит в камеру', 'talking head', 'review', 'vlog', 'selfie', 'tutorial', 'обзор', 'распаков', 'рассказывает'],
+    look: ['body', 'micro', 'color'],
+    sizes: ['Medium selfie-style shot', 'Medium close-up', 'Close-up'],
+    moves: ['subtle handheld', 'subtle handheld', 'subtle handheld'],
+    style: 'grounded UGC realism, natural skin texture, soft film grain, slightly imperfect framing.',
+    cons: ['no beauty-filter smoothing', 'natural imperfect framing'],
+    tip: ['For talking head add a Voice reference or write the line in quotes: it goes into the audio block.', 'Для talking head добавь референс голоса или напиши реплику в кавычках: она уйдёт в аудио-блок.'] },
+  { id: 'anime', n: ['Anime', 'Аниме'], ratio: '16:9', body: 'none', color: 'anime', light: 'eveningGolden',
+    kw: ['аниме', 'anime', 'манга', 'manga', 'ghibli', 'гибли', 'shonen', 'синкай', 'shinkai'],
+    look: ['color'],
+    sizes: ['Wide establishing shot', 'Medium shot', 'Close-up on the face'],
+    moves: ['slow pan', 'slow dolly in', 'subtle push-in'],
+    style: 'anime feature-film look, clean line art, cel shading, painted backgrounds, expressive eyes.',
+    cons: ['keep the character design consistent', 'smooth cloth and hair motion', 'no 3D render look'],
+    tip: ['Name the sub-style (shonen, Shinkai-like, 90s cel): it moves the result more than adjectives.', 'Назови подстиль (сёнэн, в духе Синкая, 90s cel): он влияет сильнее прилагательных.'] },
+  { id: 'musicvideo', n: ['Music video / TikTok', 'Клип / TikTok'], ratio: '9:16', body: 'red', color: 'neon', light: 'studio',
+    kw: ['клип', 'tiktok', 'тикток', 'танец', 'танцует', 'dance', 'music video', 'reels', 'ритм', 'beat', 'трек', 'под музыку', 'shorts', 'тренд'],
+    look: ['body', 'color', 'depth'],
+    sizes: ['Wide dynamic shot', 'Medium shot on the beat', 'Close-up on the beat', 'Wide finale shot'],
+    moves: ['fast tracking shot', 'whip pan', 'slow push-in', 'slow orbit 90 degrees'],
+    style: 'high-energy music-video aesthetic, strong contrast, clean silhouettes, cuts timed to the beat.',
+    cons: ['maintain the same performer across all shots', 'no ghosting between cuts'],
+    tip: ['Add an Audio reference with the "Music" role: cuts will sync to its beat.', 'Добавь аудио-референс с ролью «Музыка»: склейки подстроятся под бит.'] },
+  { id: 'drama', n: ['Drama / cinematic', 'Драма / кино'], ratio: '16:9', body: 'sony', color: 'neutral', light: 'intDay',
+    kw: ['драма', 'разговор', 'диалог', 'встреча', 'расстав', 'слёз', 'слез', 'плач', 'письмо', 'conversation', 'drama', 'emotional', 'portrait', 'портрет', 'монолог', 'эмоци'],
+    look: ['body', 'micro', 'depth', 'color', 'film'],
+    sizes: ['Wide establishing shot', 'Medium shot', 'Close-up on the face', 'Medium close-up'],
+    moves: ['locked tripod', 'slow dolly in', 'slow dolly in', 'slow dolly out'],
+    style: 'restrained cinematic drama, naturalistic performance, subtle micro-expressions.',
+    cons: [],
+    tip: ['Give the character one concrete micro-expression per shot (a swallowed breath, a glance away).', 'Дай персонажу по одной конкретной микромимике на шот (сглотнул, отвёл взгляд).'] },
+  { id: 'horror', n: ['Horror', 'Хоррор'], ratio: '16:9', body: 'arri', color: 'noir', light: 'horror',
+    kw: ['хоррор', 'ужас', 'страшн', 'призрак', 'монстр', 'крип', 'демон', 'зловещ', 'horror', 'ghost', 'scary', 'creepy'],
+    look: ['body', 'film', 'depth', 'micro'],
+    sizes: ['Wide static shot', 'Medium shot', 'Slow close-up', 'Wide shot'],
+    moves: ['locked tripod', 'very slow dolly in', 'slow tilt up', 'locked tripod'],
+    style: 'slow-burn horror, oppressive silence, restrained reveals, underexposed.',
+    cons: ['no cheap CGI look'],
+    tip: ['Horror needs space: keep the monster out of frame until the last shot.', 'Хоррору нужен воздух: держи монстра за кадром до последнего шота.'] },
+  { id: 'noir', n: ['Film noir', 'Нуар'], ratio: '16:9', body: 'arri', color: 'noir', light: 'noir',
+    kw: ['нуар', 'noir', 'детектив', 'detective', 'сыщик', 'жалюзи', 'blinds'],
+    look: ['body', 'film', 'color'],
+    sizes: ['Wide establishing shot', 'Medium shot', 'Close-up'],
+    moves: ['slow dolly in', 'locked tripod', 'slow tilt up'],
+    style: 'classic film noir, hard shadows, cigarette-smoke haze, restrained performances.',
+    cons: [],
+    tip: ['One hard key light is the whole look: do not add fill words.', 'Весь нуар — один жёсткий ключ; не добавляй слов про заполняющий свет.'] },
+  { id: 'cyberpunk', n: ['Cyberpunk / sci-fi', 'Киберпанк / sci-fi'], ratio: '21:9', body: 'ana', color: 'neon', light: 'cyber',
+    kw: ['киберпанк', 'cyberpunk', 'неон', 'neon', 'будущ', 'futur', 'sci-fi', 'андроид', 'android', 'робот', 'robot', 'hologram', 'голограм'],
+    look: ['body', 'depth', 'color', 'film'],
+    sizes: ['Wide establishing shot', 'Medium tracking shot', 'Close-up'],
+    moves: ['slow crane down', 'smooth tracking shot', 'slow dolly in'],
+    style: 'neo-noir cyberpunk, wet streets, neon signage, atmospheric haze, anamorphic flares.',
+    cons: ['neon signs carry no readable text'],
+    tip: ['Wet ground doubles every neon source: say it once, in the light block.', 'Мокрый асфальт удваивает каждый неон: достаточно сказать это один раз в блоке света.'] },
+  { id: 'nature', n: ['Nature / landscape', 'Природа / пейзаж'], ratio: '16:9', body: 'red', color: 'natural', light: 'morningGolden',
+    kw: ['пейзаж', 'природ', 'горы', 'горн', 'горах', 'океан', 'море', 'лес', 'водопад', 'landscape', 'nature', 'mountain', 'ocean', 'forest', 'waterfall', 'облак'],
+    look: ['body', 'depth', 'color'],
+    sizes: ['Wide establishing shot', 'Wide landscape shot', 'Medium detail shot'],
+    moves: ['aerial drone glide forward', 'slow pan', 'slow dolly in'],
+    style: 'natural-history cinematography, grand scale, real atmospheric depth, no people unless asked.',
+    cons: ['no text or watermarks', 'stable horizon, no warping of the landscape'],
+    tip: ['Landscapes need no references; use text-to-video and spend words on light and depth.', 'Пейзажу не нужны референсы; text-to-video, слова трать на свет и глубину.'] },
+  { id: 'fantasy', n: ['Fantasy / epic', 'Фэнтези / эпик'], ratio: '21:9', body: 'ana', color: 'teal', light: 'blueHour',
+    kw: ['фэнтези', 'фентези', 'дракон', 'волшеб', 'меч', 'рыцар', 'эльф', 'колдун', 'чародей', 'fantasy', 'dragon', 'wizard', 'magic', 'sword', 'knight', 'castle', 'замок'],
+    look: ['body', 'film', 'depth', 'micro', 'color'],
+    sizes: ['Wide establishing shot', 'Medium hero shot', 'Close-up', 'Wide epic shot'],
+    moves: ['slow crane up', 'slow orbit around the hero', 'slow dolly in', 'crane pull-back'],
+    style: 'high-fantasy epic, practical-looking costumes and props, volumetric atmosphere, grand scale.',
+    cons: [],
+    tip: ['Fantasy needs physical anchors: real fabric, metal, dust. Magic reads better against them.', 'Фэнтези держится на физических якорях: ткань, металл, пыль. На их фоне магия читается лучше.'] },
+  { id: 'romance', n: ['Romance', 'Романтика'], ratio: '16:9', body: 'sony', color: 'warm', light: 'romantic',
+    kw: ['романт', 'любов', 'свидани', 'поцелу', 'влюбл', 'свадьб', 'romantic', 'love', 'kiss', 'wedding'],
+    look: ['body', 'micro', 'depth', 'color'],
+    sizes: ['Wide shot', 'Medium shot', 'Close two-shot', 'Close-up'],
+    moves: ['slow dolly in', 'slow orbit 90 degrees', 'locked tripod', 'slow dolly in'],
+    style: 'intimate romantic cinema, soft focus falloff, warm natural skin tones.',
+    cons: [],
+    tip: ['Touch and eye line carry romance: write one small physical gesture per shot.', 'Романтику несут касания и взгляд: по одному маленькому жесту на шот.'] },
+  { id: 'documentary', n: ['Documentary', 'Документальный'], ratio: '16:9', body: 'sony', color: 'neutral', light: 'documentary',
+    kw: ['документ', 'репортаж', 'хроника', 'интервью', 'новост', 'documentary', 'interview', 'street', 'news'],
+    look: ['body', 'micro', 'color'],
+    sizes: ['Wide observational shot', 'Medium shot', 'Close-up'],
+    moves: ['handheld', 'handheld', 'subtle handheld'],
+    style: 'observational documentary realism, available light, authentic imperfections.',
+    cons: [],
+    tip: ['Handheld on a close-up face can swim: keep the identity constraint on.', 'Ручная камера на крупном лице может «плыть»: оставь constraint на идентичность.'] }
+];
+const ARCH_DEFAULT = Object.assign({}, ARCH.find(a => a.id === 'drama'), { id: 'generic', n: ['Cinematic (default)', 'Кино (по умолчанию)'] });
+
+// Detection dictionaries (word-start stems)
+const TOD_KW = {
+  dawn: ['рассвет', 'предрассвет', 'восход', 'dawn', 'sunrise'],
+  morningGolden: ['утр', 'morning'],
+  noon: ['полдень', 'полдн', 'noon', 'midday'],
+  overcast: ['пасмурн', 'облачн', 'серое небо', 'overcast', 'cloudy'],
+  eveningGolden: ['закат', 'золотой час', 'вечер', 'golden hour', 'sunset', 'evening'],
+  blueHour: ['сумерк', 'синий час', 'blue hour', 'dusk', 'twilight'],
+  night: ['ночь', 'ночн', 'night', 'midnight'],
+  studio: ['студи', 'фотосесс', 'studio']
+};
+const INTERIOR_KW = ['комнат', 'кухн', 'квартир', 'офис', 'интерьер', 'спальн', 'кафе', 'ресторан', 'бар ', 'room', 'kitchen', 'interior', 'indoor', 'apartment', 'office', 'cafe', 'bedroom'];
+const WEATHER_KW = {
+  rain: ['дожд', 'ливень', 'гроз', 'rain', 'storm'],
+  fog: ['туман', 'fog', 'mist'],
+  snow: ['снег', 'метель', 'snow', 'blizzard'],
+  heat: ['жара', 'зной', 'пустын', 'heat', 'desert']
+};
+const RATIO_KW = [
+  ['9:16', ['вертикал', 'reels', 'tiktok', 'тикток', 'shorts', '9:16', 'vertical']],
+  ['21:9', ['широкоформат', 'анаморф', '21:9', 'anamorphic', 'widescreen']],
+  ['1:1', ['квадрат', '1:1', 'square']],
+  ['16:9', ['горизонтал', '16:9', 'landscape format', 'youtube']]
+];
+const SEQ_SPLIT = /\n+|(?<=[.!?…])\s+|;\s+|\s*(?:→|->|=>)\s*|,?\s+(?:потом|затем|после этого|а затем|далее|then|after that|afterwards|next|finally|в финале|в конце)\s+/iu;
+
+// Anti-slop list (lowercase) and replacements shown in the checker
+const SLOP = ['4k', '8k', 'ultra hd', 'ultra-hd', 'masterpiece', 'best quality', 'high quality', 'hyper-realistic', 'hyperrealistic',
+  'stunning', 'amazing', 'gorgeous', 'beautiful', 'perfect skin', 'flawless', 'vibrant colors', 'vibrant colours',
+  'sharp and clear', 'professional camera', 'award-winning', 'trending on artstation', 'unreal engine',
+  'dramatic lighting', 'moody lighting', 'cinematic lighting', 'шедевр', 'потрясающ', 'красивый', 'красивая', 'красивое'];
+
+// Constraint levels
+const CONS = {
+  1: ['maintain the identity of every referenced subject', 'no morphing'],
+  2: ['maintain the identity of every referenced subject', 'clean anatomy, no extra limbs', 'strong temporal consistency, zero flicker'],
+  3: ['maintain the identity of every referenced subject', 'clean anatomy, no extra limbs or fingers', 'strong temporal consistency, zero flicker', 'no text overlays, no watermarks, no logos added', 'no style drift between shots', 'no ghosting or double exposure']
+};
+
+// Rules embedded into the meta-prompt (Mode 3)
+const META_COMMON = `You are an expert Seedance prompt engineer. Turn the brief below into ONE production-ready prompt.
+Core rules:
+1. Order: camera/optics anchors and the subject first; the first 20-30 words carry the most weight.
+2. One shot = one action + one camera movement (two at most; never three axes at once).
+3. Describe lighting physically (source, angle, Kelvin, shadow quality), never "dramatic" or "moody".
+4. Be concrete: real camera/film/lens names and micro-detail (skin pores, dust motes, fabric weave). Banned filler: 4K, ultra HD, masterpiece, stunning, beautiful, hyper-realistic, flawless, vibrant colours.
+5. Describe processes with verbs, not states. Do not restate what the reference images already show.
+6. Every @-reference gets an explicit role in its own sentence. For motion/camera references add exclusions (do not inherit actor, clothing, background, captions or music). Several angles of one subject = "one single character/object".
+7. Audio syntax: (music) <sound effects> {dialogue} 【subtitles】. Name the language and accent before any dialogue; one language per prompt; add "no subtitles" / "no BGM" when needed.
+8. Finish with constraints: identity preservation, clean anatomy, temporal consistency, no flicker, no text or watermarks.
+9. Write the prompt in English; keep spoken dialogue in its own language.`;
+const META_V20 = `Target: Seedance 2.0.
+- Length 4-15 s, up to 12 files in total (9 images, 3 videos, 3 audio). Real-person face photos may be rejected.
+- Structure the plot as numbered shots ("Shot 1:", "Shot 2:"...). Official guidance treats exact timestamps as unstable, so use at most approximate ranges, 3-5 s per shot, maximum 5 shots.
+- Keep the whole prompt under about 3,500 characters; 50-100 words per shot.`;
+const META_V25 = `Target: Seedance 2.5.
+- Length 4-30 s, up to 50 files (30 images, 10 videos, 10 audio; each video/audio reference 1.8-30.2 s). Any aspect ratio from 0.4 to 2.5. Native joint audio. Real faces in references are rejected.
+- Official structure: (1) asset referencing, (2) a one-sentence summary, (3) the plot by second-level timestamps, (4) closing constraints.
+- Timestamps are first-class: write "0-5s:", "5-10s:" lines, consecutive, whole seconds, no gaps or overlaps, covering the full duration. Each stage = one state change plus a visible end state, 2-8 s long.`;
+
+/* ===== ENGINE: decode intent -> timings -> prompt -> audit -> meta-prompt ===== */
+
+const _reCache = {};
+function stemRe(s) {
+  if (!_reCache[s]) _reCache[s] = new RegExp('(?<![\\p{L}\\p{N}])' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'iu');
+  return _reCache[s];
+}
+const hitCount = (text, list) => list.reduce((n, s) => n + (stemRe(s).test(text) ? 1 : 0), 0);
+const firstIdx = (text, list) => { let best = -1; for (const s of list) { const m = stemRe(s).exec(text); if (m && (best < 0 || m.index < best)) best = m.index; } return best; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const lowFirst = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+const dot = s => /[.!?…]$/.test(s) ? s : s + '.';
+const words = s => (s.match(/[\p{L}\p{N}'-]+/gu) || []).length;
+const pick = (arr, i, n) => !arr.length ? '' : (n <= 1 ? arr[0] : arr[Math.round(i * (arr.length - 1) / (n - 1))]);
+
+// Largest-remainder allocation of `total` whole seconds across weights, each at least `min`
+function allocate(weights, total, min) {
+  const n = weights.length, rest = total - min * n;
+  if (rest < 0) return null;
+  const sum = weights.reduce((a, b) => a + b, 0) || n;
+  const raw = weights.map(w => rest * w / sum);
+  const fl = raw.map(Math.floor);
+  let left = rest - fl.reduce((a, b) => a + b, 0);
+  raw.map((r, i) => [r - Math.floor(r), i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => fl[i]++);
+  return fl.map(f => f + min);
+}
+
+function parseRatio(str) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*[:/xх]\s*(\d+(?:\.\d+)?)\s*$/.exec(str || '');
+  if (!m) return null;
+  const w = +m[1], h = +m[2];
+  return h > 0 && w > 0 ? { w, h, v: w / h, s: `${m[1]}:${m[2]}` } : null;
+}
+
+/* ---------- 1. Decode the brief ---------- */
+function decode(text) {
+  const I = { beats: [], moves: [], weather: null, tod: null, interior: false, ratio: null, dur: null, arch: null, scores: [], conf: 0, lang: 'en', userTimes: false };
+  const cyr = (text.match(/[а-яё]/gi) || []).length, lat = (text.match(/[a-z]/gi) || []).length;
+  I.lang = cyr > lat ? 'ru' : 'en';
+
+  // duration hint (ignore the "5s" tail of a timestamp range)
+  const dm = /(?<![\d.]\s?[-–—]\s?)(?<![\d.])(\d{1,2})\s*(?:сек\p{L}*|с(?![\p{L}])|s(?![\p{L}])|sec\p{L}*|second\p{L}*)/iu.exec(text);
+  if (dm) I.dur = +dm[1];
+
+  // scene type
+  I.scores = ARCH.map(a => ({ a, s: hitCount(text, a.kw) })).sort((x, y) => y.s - x.s);
+  const total = I.scores.reduce((n, x) => n + x.s, 0);
+  if (I.scores[0].s > 0) { I.arch = I.scores[0].a; I.conf = Math.round(100 * I.scores[0].s / total); }
+
+  for (const [k, kws] of Object.entries(TOD_KW)) if (!I.tod && hitCount(text, kws)) I.tod = k;
+  I.interior = hitCount(text, INTERIOR_KW) > 0;
+  for (const [k, kws] of Object.entries(WEATHER_KW)) if (!I.weather && hitCount(text, kws)) I.weather = k;
+  for (const [r, kws] of RATIO_KW) if (!I.ratio && hitCount(text, kws)) I.ratio = r;
+
+  I.moves = Object.entries(MOVES).map(([k, m]) => [k, firstIdx(text, m.kw)]).filter(x => x[1] >= 0).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+
+  // dialogue: mask quotes, split, then hand the lines back to the beat they belong to
+  const quotes = [];
+  let work = text.replace(/[«“"„]([^«»“”"„\n]{2,240})[»”"“]/g, (m, q) => { quotes.push(q.trim()); return ` ⟦${quotes.length - 1}⟧. `; });
+  work = work.replace(/^\s*(\d+)[.)]\s+/gm, '');
+  const tsRe = /^(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*(?:s|sec|с)?\s*[:.)\-–]\s*/iu;
+  const shotRe = /^(?:shot|шот|кадр|сцена|scene)\s*\d+\s*[:.)\-–]\s*/iu;
+  let pending = [];
+  for (let part of work.split(SEQ_SPLIT)) {
+    if (!part) continue;
+    part = part.replace(/^[\s.,;:!?…–—-]+/u, '').replace(/^(?:потом|затем|после этого|а затем|далее|then|after that|afterwards|next|finally|в финале|в конце)[,:]?\s+/iu, '').trim();
+    let t0 = null, t1 = null;
+    const tm = tsRe.exec(part);
+    if (tm) { t0 = +tm[1]; t1 = +tm[2]; part = part.slice(tm[0].length); }
+    part = part.replace(shotRe, '');
+    const lines = [];
+    part = part.replace(/⟦(\d+)⟧/g, (m, i) => { lines.push(quotes[+i]); return ''; }).replace(/[\s:–—,.-]+$/u, '').trim();
+    if (part.length < 3) {
+      if (lines.length) (I.beats.length ? I.beats[I.beats.length - 1].lines : pending).push(...lines);
+      continue;
+    }
+    I.beats.push({ text: dot(cap(part)), lines: pending.concat(lines), t0, t1 });
+    pending = [];
+  }
+  I.userTimes = I.beats.length >= 2 && I.beats.every(b => b.t0 !== null) && I.beats.every((b, i) => i === 0 ? b.t0 === 0 : b.t0 === I.beats[i - 1].t1);
+  I.quotes = quotes;
+  return I;
+}
+
+/* ---------- 2. Build the prompt ---------- */
+const GENRE_LIGHTS = new Set(['noir', 'cyber', 'horror', 'romantic', 'documentary', 'commercial']);
+
+function build(S) {
+  const L = LIM[S.ver];
+  const I = decode(S.text || '');
+  const notes = [];
+  const note = (sev, en, ru) => notes.push({ sev, msg: [en, ru] });
+  const dur = clamp(Math.round(S.dur) || L.min, L.min, L.max);
+  const arch = S.arch && S.arch !== 'auto' ? ARCH.find(a => a.id === S.arch) : (I.arch || ARCH_DEFAULT);
+  if (!I.beats.length) return { empty: true, intent: I, arch, dur, notes, prompt: '', shots: [] };
+
+  // aspect ratio
+  let ratio = S.ratio && S.ratio !== 'auto' ? S.ratio : (I.ratio || arch.ratio);
+  const pr = parseRatio(ratio);
+  if (!pr) { note('warn', `Aspect ratio "${ratio}" not understood; used ${arch.ratio}.`, `Формат «${ratio}» не распознан; взят ${arch.ratio}.`); ratio = arch.ratio; }
+  else if (S.ver === '2.5' && (pr.v < 0.4 || pr.v > 2.5)) { note('warn', 'Seedance 2.5 accepts ratios from 0.4 to 2.5; using 16:9.', 'Seedance 2.5 принимает форматы от 0.4 до 2.5; взят 16:9.'); ratio = '16:9'; }
+  else if (S.ver === '2.0' && !L.ratios.includes(pr.s)) { note('warn', `Seedance 2.0 supports ${L.ratios.join(', ')}; using ${arch.ratio}.`, `Seedance 2.0 поддерживает ${L.ratios.join(', ')}; взят ${arch.ratio}.`); ratio = arch.ratio; }
+  else ratio = pr.s;
+
+  // shots
+  let beats = I.beats.map(b => ({ ...b, lines: b.lines.slice() }));
+  const maxN = Math.max(1, Math.min(L.maxShots, Math.floor(dur / 2)));
+  while (beats.length > maxN) {
+    let bi = 0, bl = Infinity;
+    for (let i = 0; i < beats.length - 1; i++) { const l = beats[i].text.length + beats[i + 1].text.length; if (l < bl) { bl = l; bi = i; } }
+    beats.splice(bi, 2, { text: beats[bi].text.replace(/\.$/, '') + '; then ' + lowFirst(beats[bi + 1].text), lines: beats[bi].lines.concat(beats[bi + 1].lines), t0: null, t1: null });
+    if (beats.length === maxN) note('warn', `${I.beats.length} events do not fit ${dur} s in ${maxN} shots; neighbouring events were merged (one action per shot is safer).`, `${I.beats.length} событий не помещаются в ${dur} с на ${maxN} шотов; соседние события объединены (одно действие на шот надёжнее).`);
+  }
+  const n = beats.length;
+  let durs;
+  if (I.userTimes && n === I.beats.length && beats[n - 1].t1 === dur) durs = beats.map(b => b.t1 - b.t0);
+  else {
+    if (I.userTimes && n === I.beats.length) note('info', 'Your own timings were scaled to the chosen duration.', 'Твои тайминги пропорционально подогнаны под выбранную длительность.');
+    const w = beats.map(b => I.userTimes && b.t0 !== null ? b.t1 - b.t0 : Math.max(6, words(b.text)));
+    durs = allocate(w, dur, 2) || allocate(w, dur, 1);
+  }
+  const shots = [];
+  let t = 0;
+  const forced = S.move && S.move !== 'auto' ? [S.move] : null;
+  beats.forEach((b, i) => {
+    const size = pick(arch.sizes, i, n);
+    const mid = forced ? forced[0] : I.moves[i];
+    const move = mid ? MOVES[mid].p : pick(arch.moves, i, n);
+    shots.push({ n: i + 1, t0: t, t1: t + durs[i], size, move, mid: mid || null, text: b.text, lines: b.lines });
+    t += durs[i];
+  });
+
+  // references
+  const ctr = { image: 0, video: 0, audio: 0 };
+  const refLines = [], refTokens = [];
+  let hasCharacter = false, hasFace = false;
+  (S.refs || []).forEach(r => {
+    const role = ROLES[r.role];
+    if (!role || (role.ver && role.ver !== S.ver)) return;
+    ctr[role.kind]++;
+    const tok = '@' + cap(role.kind) + ctr[role.kind];
+    refTokens.push(tok + ' (' + role.l[0] + ')');
+    const nn = (r.note || '').trim();
+    refLines.push(role.f(tok, nn ? ` (${nn})` : ''));
+    if (r.role === 'character' || r.role === 'product') hasCharacter = true;
+    if (r.role === 'character') hasFace = true;
+  });
+  const cnt = ctr.image + ctr.video + ctr.audio;
+  if (ctr.image > L.img) note('err', `Too many images: ${ctr.image} of ${L.img} allowed in ${S.ver}.`, `Слишком много картинок: ${ctr.image} из ${L.img} для ${S.ver}.`);
+  if (ctr.video > L.vid) note('err', `Too many videos: ${ctr.video} of ${L.vid} allowed in ${S.ver}.`, `Слишком много видео: ${ctr.video} из ${L.vid} для ${S.ver}.`);
+  if (ctr.audio > L.aud) note('err', `Too many audio files: ${ctr.audio} of ${L.aud} allowed in ${S.ver}.`, `Слишком много аудио: ${ctr.audio} из ${L.aud} для ${S.ver}.`);
+  if (cnt > L.total) note('err', `Total files ${cnt} exceeds the ${L.total} limit of ${S.ver}.`, `Всего файлов ${cnt} при лимите ${L.total} в ${S.ver}.`);
+  if (hasFace) note('info', S.ver === '2.5' ? 'Seedance 2.5 rejects real faces in references; use an illustrated or AI-generated character.' : 'Seedance 2.0 may reject photos of real people; use an illustrated or AI-generated character.', S.ver === '2.5' ? 'Seedance 2.5 отклоняет реальные лица в референсах; используй нарисованного или AI-персонажа.' : 'Seedance 2.0 может отклонить фото реальных людей; используй нарисованного или AI-персонажа.');
+
+  // look
+  const bodyKey = S.body && S.body !== 'auto' ? S.body : arch.body;
+  const cap_ = { lean: 2, std: 4, rich: 5 }[S.detail || 'std'];
+  const lookParts = [];
+  for (const k of arch.look) {
+    if (lookParts.length >= cap_) break;
+    const s = k === 'body' ? BODY[bodyKey] : k === 'color' ? COLOR[arch.color] : BLOCK[k];
+    if (s) lookParts.push(s);
+  }
+  const look = (lookParts.length ? dot(lookParts.join('; ')) + ' ' : '') + cap(arch.style);
+
+  // light
+  let lk = S.light && S.light !== 'auto' ? [S.light] : [];
+  if (!lk.length) {
+    let base = null;
+    if (I.tod) {
+      base = I.tod;
+      if (I.interior && (I.tod === 'night' || I.tod === 'eveningGolden')) base = 'intNight';
+      else if (I.interior && I.tod !== 'studio') base = 'intDay';
+    } else if (I.interior && !GENRE_LIGHTS.has(arch.light)) base = 'intDay';
+    if (base) { lk.push(base); if (GENRE_LIGHTS.has(arch.light)) lk.push(arch.light); }
+    else lk.push(arch.light);
+    if (I.weather) lk.push(I.weather);
+  }
+  const light = lk.map(k => LIGHT[k]).join('; ');
+
+  // audio
+  const br = S.brackets !== false;
+  const manual = (S.dialogue || '').split('\n').map(s => s.trim()).filter(Boolean);
+  const allLines = manual.concat(...shots.map(s => s.lines));
+  let dl = S.dlang || 'auto';
+  if (dl === 'auto') dl = /[а-яё]/i.test(allLines.join(' ')) ? 'ruuk' : 'en';
+  const DL = { en: 'English', ru: 'Russian', ruuk: 'Ukrainian language (the spoken text is Russian)', zh: 'Mandarin Chinese', es: 'Spanish', de: 'German', fr: 'French' };
+  const aud = [];
+  const music = (S.music || '').trim(), sfx = (S.sfx || '').trim();
+  if (music && !S.nobgm) aud.push(br ? `(${music})` : `Music: ${music}.`);
+  if (sfx) aud.push(br ? `<${sfx}>` : `Sound effects: ${sfx}.`);
+  if (manual.length) aud.push('Dialogue: ' + manual.map(q => br ? `{"${q}"}` : `"${q}"`).join(' '));
+  if (allLines.length) aud.unshift(`Dialogue language: ${DL[dl] || dl}; one language only.`);
+  if (S.nobgm) aud.push('No background music.');
+  if (S.nosubs !== false && allLines.length) aud.push('No subtitles.');
+  if (S.nobgm && music) note('warn', '"No BGM" is on, so the music description was left out.', 'Включено «без музыки», поэтому описание музыки не вошло в промпт.');
+
+  const fmtLine = s => {
+    const lines = s.lines.map(q => br ? `{"${q}"}` : `Says: "${q}".`).join(' ');
+    return lines;
+  };
+
+  // stage lines
+  const stageWord = S.ver === '2.5' ? 'stage' : 'shot';
+  const hdr = `Total: ${dur} seconds, ${ratio}, 24 fps, ${n === 1 ? '1 continuous shot' : n + ' ' + stageWord + 's'}.`;
+  const stageLines = shots.map((s, i) => {
+    const label = S.ver === '2.5' ? `${s.t0}-${s.t1}s:` : (S.times ? `Shot ${s.n} (${s.t0}-${s.t1}s):` : `Shot ${s.n}:`);
+    let body = `${s.size}, ${s.move}. ${s.text}`;
+    if (s.lines.length) body += ' ' + fmtLine(s);
+    if (S.ver === '2.5' && S.endState !== false) {
+      if (i < n - 1) body += ` Ends in a settled ${lowFirst(pick(arch.sizes, i + 1, n))}.`;
+      else body += ' Holds a clean final frame.';
+    }
+    s.line = `${label} ${body}`;
+    return s.line;
+  });
+  if (n === 1) {
+    const only = shots[0];
+    only.line = only.line.replace(/^Shot 1(?: \([^)]*\))?:/, S.ver === '2.5' ? '' : 'Shot 1:').trim();
+  }
+
+  // constraints
+  const cons = CONS[S.cons || 2].filter((c, i) => i > 0 || hasCharacter).concat(arch.cons);
+  const neg = (S.neg || '').split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+  const consLine = 'Constraints: ' + cons.concat(neg).join(', ') + '.';
+
+  // assemble
+  const first = beats.slice(0, 2).map(b => b.text.replace(/\.$/, '')).join('; ');
+  const summary = 'Summary: ' + dot(first.split(/\s+/).slice(0, 30).join(' '));
+  const blocks = [];
+  blocks.push([hdr].concat(refLines).join('\n'));
+  if (S.ver === '2.5') {
+    blocks.push([summary, 'Look: ' + look, 'Lighting: ' + dot(light)].join('\n'));
+    blocks.push(stageLines.join('\n'));
+  } else {
+    blocks.push(stageLines.join('\n'));
+    blocks.push(['Style: ' + look, 'Lighting: ' + dot(light)].join('\n'));
+  }
+  if (aud.length) blocks.push('Audio: ' + aud.join(' '));
+  blocks.push(consLine);
+  const prompt = blocks.join('\n\n');
+
+  // advice
+  if (n === 1 && words(beats[0].text) < 14 && dur > 8) note('info', `One event for ${dur} s: the clip is generated as a single continuous take. Add 2-3 events if you want cuts.`, `Одно событие на ${dur} с: ролик получится одним непрерывным кадром. Добавь 2–3 события, если нужны склейки.`);
+  if (durs.some(d => d > 8)) note('info', 'A stage longer than 8 s is risky; split it into two events.', 'Отрезок длиннее 8 с рискован; раздели его на два события.');
+  if (I.lang === 'ru') note('info', 'Scaffolding is in English, your wording stays as written. For a full English prompt use the LLM tab (Mode 3).', 'Каркас на английском, твои формулировки остаются как есть. Для полностью английского промпта используй вкладку LLM (режим 3).');
+  if (allLines.length && !music && !sfx) note('info', 'Dialogue found. Add ambient sound or music for a fuller track.', 'Найдена речь. Добавь фоновые звуки или музыку, чтобы дорожка звучала полнее.');
+  if (!cnt && /@(?:image|img)/i.test(S.text)) note('warn', 'Your text mentions @Image but no reference is attached in the References panel.', 'В тексте есть @Image, но референс не добавлен в панель «Референсы».');
+  note('tip', arch.tip[0], arch.tip[1]);
+
+  const R = { prompt, shots, intent: I, arch, dur, ratio, light: lk, notes, n, refCount: cnt, refTokens, hdr };
+  R.audit = lint(prompt, S.ver, dur);
+  return R;
+}
+
+/* ---------- 3. Audit / linter ---------- */
+const MV_RE = [['whip', /whip[- ]pan/i], ['orbit', /\borbit|arc shot|orbital/i], ['dolly', /\bdolly|push[- ]in|pull[- ]back/i], ['pan', /\bpan\b/i], ['tilt', /\btilt/i],
+  ['crane', /\bcrane/i], ['handheld', /hand-?held/i], ['tracking', /tracking|\btruck\b/i], ['zoom', /\bzoom/i], ['static', /locked tripod|static camera|no camera movement/i], ['aerial', /aerial|drone/i]];
+
+function lint(p, ver, dur) {
+  const L = LIM[ver], out = [];
+  const add = (sev, id, en, ru) => out.push({ sev, id, msg: [en, ru] });
+  if (!p || !p.trim()) return { issues: [], score: 0 };
+  const chars = p.length, wc = words(p);
+  if (chars > L.chars) add('warn', 'len', `${chars} characters; the recommended cap for ${ver} is about ${L.chars}. Trim secondary detail.`, `${chars} символов; рекомендуемый потолок для ${ver} около ${L.chars}. Убери второстепенное.`);
+  if (wc < 35) add('tip', 'thin', 'Very short prompt: add subject detail, camera and a physical light source.', 'Очень короткий промпт: добавь детали героя, камеру и физический источник света.');
+
+  const slop = SLOP.filter(w => new RegExp('(?<![\\p{L}\\p{N}])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + (/[а-яё]/i.test(w) ? '' : '(?![\\p{L}\\p{N}])'), 'iu').test(p));
+  if (slop.length) add('warn', 'slop', `Empty quality words: ${slop.join(', ')}. They add nothing; replace with camera, film, lens or light specifics.`, `Пустые слова качества: ${slop.join(', ')}. Они ничего не дают; замени конкретикой: камера, плёнка, оптика, свет.`);
+
+  // stages
+  const stages = [];
+  let cur = null;
+  const startRe = /^\s*(?:(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*(?:s|sec|с)(?![\p{L}\p{N}])|shot\s*(\d+))/iu;
+  const sectionRe = /^\s*(audio|constraints?|style|look|lighting|total|summary|music|sfx|sound|dialogue|avoid)\b/i;
+  for (const line of p.split('\n')) {
+    const m = startRe.exec(line);
+    if (m) {
+      let t0 = null, t1 = null;
+      if (m[1] !== undefined) { t0 = +m[1]; t1 = +m[2]; }
+      else { const r = /(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*s/i.exec(line); if (r) { t0 = +r[1]; t1 = +r[2]; } }
+      cur = { text: line, t0, t1, shot: m[3] !== undefined };
+      stages.push(cur);
+    } else if (sectionRe.test(line) || !line.trim()) cur = null;
+    else if (cur) cur.text += ' ' + line;
+  }
+  const timed = stages.filter(s => s.t0 !== null);
+  if (ver === '2.5') {
+    if (!stages.length && (dur || 0) > 8) add('tip', 'ts', 'Seedance 2.5 reads second-level timestamps: split the plot into "0-5s:", "5-10s:" lines.', 'Seedance 2.5 понимает посекундные тайминги: разбей сюжет на строки «0-5s:», «5-10s:».');
+    if (timed.length) {
+      if (timed[0].t0 !== 0) add('err', 'ts0', 'Timeline must start at 0s.', 'Таймлайн должен начинаться с 0s.');
+      for (let i = 1; i < timed.length; i++) if (timed[i].t0 !== timed[i - 1].t1) { add('err', 'tsgap', `Gap or overlap between stages ${i} and ${i + 1}: use consecutive ranges.`, `Дыра или нахлёст между отрезками ${i} и ${i + 1}: диапазоны должны идти подряд.`); break; }
+      if (timed.some(s => s.t0 % 1 || s.t1 % 1)) add('warn', 'tsdec', 'Use whole seconds in timestamps.', 'Используй целые секунды в таймингах.');
+      if (dur && timed[timed.length - 1].t1 !== dur) add('err', 'tsend', `Timeline ends at ${timed[timed.length - 1].t1}s but the duration is ${dur}s.`, `Таймлайн заканчивается на ${timed[timed.length - 1].t1}s, а длительность ${dur}s.`);
+      if (timed.length > L.maxShots) add('warn', 'tsmany', `${timed.length} stages; more than ${L.maxShots} gets crowded.`, `${timed.length} отрезков; больше ${L.maxShots} уже тесно.`);
+      if (timed.some(s => s.t1 - s.t0 < 2)) add('warn', 'tsshort', 'A stage under 2 s is too short for a state change plus an end state.', 'Отрезок короче 2 с слишком короткий для действия и конечного состояния.');
+    }
+  } else {
+    if (timed.length) add('tip', 'ts20', 'Times in 2.0 are hints: the official guide calls exact timestamps unstable, so the numbered "Shot N" order carries the structure.', 'Время в 2.0 — подсказка: по официальному гайду точные таймкоды нестабильны, структуру держит нумерация «Shot N».');
+    if (!stages.length && (dur || 0) > 6) add('tip', 'shots20', 'For clips over 6 s, structure the plot as "Shot 1:", "Shot 2:".', 'Для роликов дольше 6 с структурируй сюжет как «Shot 1:», «Shot 2:».');
+    if (stages.length > L.maxShots) add('warn', 'shotmany', `${stages.length} shots; Seedance 2.0 holds up to about ${L.maxShots} cleanly.`, `${stages.length} шотов; Seedance 2.0 уверенно держит около ${L.maxShots}.`);
+  }
+  stages.forEach((s, i) => {
+    const tag = `#${i + 1}`;
+    let txt = s.text;
+    const cats = MV_RE.filter(([k, re]) => { const hit = re.test(txt); if (hit && k === 'whip') txt = txt.replace(/whip[- ]pan/gi, ''); return hit; }).map(x => x[0]);
+    const sd = s.t0 !== null ? s.t1 - s.t0 : null;
+    if (cats.length >= 3) add('err', 'mv3', `Shot ${tag}: ${cats.length} camera movements (${cats.join(' + ')}). Three axes at once break the model; keep one, two at most.`, `Шот ${tag}: ${cats.length} движения камеры (${cats.join(' + ')}). Три оси ломают модель; оставь одно, максимум два.`);
+    else if (cats.includes('static') && cats.length > 1) add('err', 'mvstat', `Shot ${tag}: locked camera contradicts another movement.`, `Шот ${tag}: статичная камера противоречит другому движению.`);
+    else if (cats.includes('orbit') && cats.includes('handheld')) add('warn', 'mvoh', `Shot ${tag}: orbit + handheld causes jitter.`, `Шот ${tag}: orbit + handheld даёт дрожание.`);
+    else if (cats.includes('orbit') && cats.includes('dolly') && (sd === null || sd > 5)) add('warn', 'mvod', `Shot ${tag}: orbit + dolly drifts after about 5 s.`, `Шот ${tag}: orbit + dolly уплывает после ~5 с.`);
+    else if (cats.includes('pan') && cats.includes('dolly')) add('warn', 'mvpd', `Shot ${tag}: pan + dolly together can jitter; try one.`, `Шот ${tag}: pan + dolly вместе могут дрожать; попробуй одно.`);
+    if (cats.includes('orbit') && /360/.test(txt) && sd !== null && sd < 6) add('warn', 'or360', `Shot ${tag}: a 360° orbit in under 6 s causes artefacts.`, `Шот ${tag}: орбита 360° быстрее 6 с даёт артефакты.`);
+    if (/\b(?:then|and then|after that)\b|потом|затем/i.test(txt)) add('warn', 'act', `Shot ${tag}: more than one action ("then"). One action per shot; give the next one its own shot.`, `Шот ${tag}: больше одного действия («потом»). Одно действие на шот; следующему нужен свой шот.`);
+    const wl = ver === '2.0' ? 150 : 220;
+    if (words(txt) > wl) add('warn', 'wlen', `Shot ${tag} is ${words(txt)} words; above ${wl} the model starts dropping detail.`, `Шот ${tag}: ${words(txt)} слов; после ${wl} модель начинает терять детали.`);
+  });
+
+  // references
+  const toks = [...new Set((p.match(/@(?:image|img|video|vid|audio|aud)\s?\d+/gi) || []).map(s => s.toLowerCase().replace(/\s/g, '')))];
+  if (toks.length) {
+    const kind = t => /^@(?:image|img)/.test(t) ? 'img' : /^@(?:video|vid)/.test(t) ? 'vid' : 'aud';
+    const c = { img: 0, vid: 0, aud: 0 };
+    toks.forEach(t => c[kind(t)]++);
+    if (c.img > L.img || c.vid > L.vid || c.aud > L.aud || toks.length > L.total) add('err', 'refmax', `Reference limits for ${ver}: ${L.img} images, ${L.vid} videos, ${L.aud} audio, ${L.total} files in total.`, `Лимиты референсов для ${ver}: ${L.img} изображений, ${L.vid} видео, ${L.aud} аудио, ${L.total} файлов всего.`);
+    const roleRe = /\b(?:as|is|for|are)\b[^.\n]{0,60}\b(?:character|product|scene|location|style|reference|first frame|last frame|motion|camera|music|voice|prop|clip|frame|sound|identity|source)|персонаж|продукт|локаци|стил|движени|музык|голос|кадр/i;
+    const noRole = toks.filter(t => { const i = p.toLowerCase().replace(/@(\w+)\s(\d)/g, '@$1$2').indexOf(t); return !roleRe.test(p.slice(i, i + 130)); });
+    if (noRole.length) add('warn', 'refrole', `${noRole.join(', ')}: no explicit role. Say what each file is ("@Image1 as the character...").`, `${noRole.join(', ')}: нет явной роли. Напиши, чем является каждый файл («@Image1 as the character...»).`);
+    if (toks.some(t => kind(t) === 'vid') && !/only|do not inherit|don't inherit|edit|extend|не наслед/i.test(p)) add('tip', 'refexcl', 'Video reference without exclusions: add "motion/camera only, do not inherit actor, clothing, background, captions or music".', 'Видео-референс без исключений: добавь «motion/camera only, do not inherit actor, clothing, background, captions or music».');
+    if (toks.some(t => kind(t) === 'img') && !/identity|exact face|face|outfit|лиц/i.test(p)) add('tip', 'refid', 'No identity-preservation phrase for the image reference.', 'Для референса-изображения нет фразы про сохранение идентичности.');
+  }
+
+  // audio
+  if (/\{[^}]{2,}\}/.test(p) || /(?:says|speaks|говорит|произносит)\s*[:"“«]/i.test(p)) {
+    if (!/language|accent|english|russian|chinese|mandarin|ukrainian|spanish|german|french|на русском|на английском|язык/i.test(p)) add('warn', 'dlang', 'Dialogue without a named language/accent. Name it before the line.', 'Речь без указания языка/акцента. Назови язык перед репликой.');
+    if (!/subtitle|субтитр/i.test(p)) add('tip', 'nosub', 'Add "No subtitles" so captions do not burn into the video.', 'Добавь «No subtitles», чтобы субтитры не впечатались в видео.');
+  }
+
+  if (!/constraint|no morph|identity|no flicker|temporal|avoid|clean anatomy/i.test(p)) add('warn', 'cons', 'No constraints block. Close with identity, anatomy, flicker and text constraints.', 'Нет блока ограничений. Закончи промпт constraints: идентичность, анатомия, мерцание, текст.');
+  if (/\blight(?:ing)?\b/i.test(p) && !/\d{4}\s?K\b|°|softbox|\bkey\b|lamp|window|\bsun\b|neon|tungsten|fluorescent|octabox/i.test(p)) add('tip', 'light', 'Light is mentioned but no physical source is given (source, angle, Kelvin).', 'Свет упомянут, но нет физического источника (источник, угол, Kelvin).');
+  const cy = (p.match(/[а-яё]/gi) || []).length, la = (p.match(/[a-z]/gi) || []).length;
+  if (cy > 40 && la > 40 && cy / (cy + la) > 0.12 && cy / (cy + la) < 0.88) add('tip', 'mix', 'Mixed languages in the description. One language is more stable (dialogue lines aside).', 'Смесь языков в описании. Один язык стабильнее (кроме реплик).');
+  if ((p.match(/\bno\b|without|don't|do not/gi) || []).length > 12) add('tip', 'neg', 'Many negations: a pile of "no ..." dilutes the prompt. Keep the ones that matter.', 'Много отрицаний: куча «no ...» размывает промпт. Оставь важные.');
+
+  const pen = { err: 18, warn: 7, tip: 2 };
+  const score = Math.max(0, 100 - out.reduce((s, i) => s + pen[i.sev], 0));
+  return { issues: out, score, chars, words: wc };
+}
+
+function stripSlop(p) {
+  let s = p;
+  for (const w of SLOP) s = s.replace(new RegExp('(?<![\\p{L}\\p{N}])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + (/[а-яё]/i.test(w) ? '' : '(?![\\p{L}\\p{N}])'), 'giu'), '');
+  return s.replace(/[ \t]{2,}/g, ' ').replace(/\s+([,.;])/g, '$1').replace(/([,;])\s*([,;.])/g, '$2').replace(/^[\s.,;]+/gm, '').trim();
+}
+function addConstraints(p) {
+  return /constraints?:/i.test(p) ? p : p.trim() + '\n\nConstraints: ' + CONS[2].join(', ') + '.';
+}
+
+/* ---------- 4. Meta-prompts (Mode 3) ---------- */
+function buildMeta(S, R, lang) {
+  const reply = lang === 'ru' ? 'Russian' : 'English';
+  const refs = (S.refs || []).filter(r => ROLES[r.role] && (!ROLES[r.role].ver || ROLES[r.role].ver === S.ver));
+  const L = [META_COMMON, '', S.ver === '2.5' ? META_V25 : META_V20, '', 'BRIEF',
+    `Description: ${S.text.trim()}`,
+    `Duration: ${R.dur} s`, `Aspect ratio: ${R.ratio}`,
+    `Scene type (auto-detected): ${R.arch.n[0]}`];
+  if (refs.length) { L.push('References:'); refs.forEach(r => L.push(`- ${ROLES[r.role].kind} / ${ROLES[r.role].l[0]}${r.note ? ': ' + r.note : ''}`)); }
+  if (S.music) L.push(`Music: ${S.music}`);
+  if (S.sfx) L.push(`Sound effects: ${S.sfx}`);
+  if (S.dialogue) L.push(`Dialogue: ${S.dialogue.replace(/\n/g, ' / ')}`);
+  if (S.neg) L.push(`Must avoid: ${S.neg.replace(/\n/g, ', ')}`);
+  L.push('', 'RULES-ENGINE DRAFT (improve it: translate, tighten, add concrete detail; do not just copy it):', R.prompt, '',
+    'OUTPUT FORMAT',
+    '1. The final prompt in a single code block.',
+    `2. "What I assumed": at most 3 bullets, in ${reply}.`,
+    `3. One tip to improve the result, in ${reply}.`);
+  return L.join('\n');
+}
+
+function buildImproveMeta(p, ver, dur, issues, lang) {
+  const reply = lang === 'ru' ? 'Russian' : 'English';
+  const L = [META_COMMON, '', ver === '2.5' ? META_V25 : META_V20, '', `Task: rewrite the Seedance ${ver} prompt below so it follows the rules, keeping the author's intent. Duration: ${dur} s.`,
+    '', 'PROMPT', p.trim(), ''];
+  if (issues.length) { L.push('KNOWN PROBLEMS (from the automatic checker):'); issues.forEach(i => L.push(`- [${i.sev}] ${i.msg[0]}`)); L.push(''); }
+  L.push('OUTPUT FORMAT', '1. The improved prompt in a single code block.', `2. "What I changed": at most 4 bullets, in ${reply}.`);
+  return L.join('\n');
+}
+
+if (typeof module !== 'undefined') module.exports = { LIM, ARCH, decode, build, lint, stripSlop, addConstraints, buildMeta, buildImproveMeta, allocate, parseRatio };
+
+/* ===== UI: i18n, state, rendering, history, export ===== */
+
+const T = {
+  kicker: ['Seedance 2.0 / 2.5 · Prompt compiler', 'Seedance 2.0 / 2.5 · Компилятор промптов'],
+  h1: ['Describe the film. Get the prompt.', 'Опиши ролик. Получи промпт.'],
+  sub: ['A rules engine for Seedance 2.0 and 2.5. It decodes your brief, picks the format and splits it into timings. Runs in your browser: no server, no API key.',
+        'Движок правил для Seedance 2.0 и 2.5. Расшифровывает замысел, выбирает формат и режет его на тайминги. Работает в браузере: без сервера и без ключа.'],
+  ver: ['Model', 'Модель'],
+  tab_compile: ['Compile', 'Компиляция'], tab_improve: ['Improve my prompt', 'Улучшить мой промпт'], tab_hist: ['History', 'История'],
+  c_brief: ['Brief', 'Бриф'], f_desc: ['What happens in the video', 'Что происходит в ролике'],
+  ph_desc: ['Plot, characters, place, mood, camera wishes. One event per sentence. Dialogue in quotes goes to the audio track.',
+            'Сюжет, герои, место, настроение, пожелания по камере. Одно событие на предложение. Реплики в кавычках уйдут в аудио-дорожку.'],
+  ex: ['Examples', 'Примеры'],
+  f_dur: ['Duration, s', 'Длительность, с'], f_ratio: ['Aspect ratio', 'Формат кадра'], f_arch: ['Scene type', 'Тип сцены'],
+  auto: ['Auto', 'Авто'], custom: ['Custom…', 'Свой…'],
+  c_look: ['Look & camera', 'Вид и камера'], f_detail: ['Look detail', 'Детализация вида'],
+  d_lean: ['Lean', 'Минимум'], d_std: ['Standard', 'Стандарт'], d_rich: ['Rich', 'Максимум'],
+  f_cons: ['Constraints', 'Ограничения'], k1: ['Light', 'Лёгкие'], k2: ['Standard', 'Стандарт'], k3: ['Strict', 'Строгие'],
+  f_body: ['Camera body', 'Камера'], b_phone: ['Smartphone', 'Смартфон'], b_none: ['None', 'Нет'],
+  f_light: ['Light', 'Свет'], f_move: ['Camera move', 'Движение камеры'],
+  c_refs: ['References', 'Референсы'], add_ref: ['+ Add reference', '+ Добавить референс'],
+  ph_refnote: ['what it is (optional)', 'что это (необязательно)'],
+  refs_hint: ['Every file gets a role and its own sentence. Upload the files in Seedance in this order: @Image1, @Image2, @Video1, @Audio1.',
+              'Каждому файлу своя роль и своё предложение. Загружай файлы в Seedance в этом порядке: @Image1, @Image2, @Video1, @Audio1.'],
+  g_image: ['Image', 'Изображение'], g_video: ['Video', 'Видео'], g_audio: ['Audio', 'Аудио'], files: ['files', 'файлов'],
+  c_audio: ['Audio', 'Аудио'], f_music: ['Music', 'Музыка'], f_sfx: ['Sound effects', 'Звуковые эффекты'],
+  ph_music: ['e.g. soft piano, slow build', 'напр. мягкое пианино, медленное нарастание'],
+  ph_sfx: ['e.g. water drops, glass clink', 'напр. капли воды, звон стекла'],
+  f_dlg: ['Extra dialogue (one line per row)', 'Доп. реплики (по одной в строке)'],
+  ph_dlg: ['Lines in quotes inside the description are picked up automatically.', 'Реплики в кавычках из описания подхватываются автоматически.'],
+  f_dlang: ['Dialogue language', 'Язык речи'], dl_auto: ['Auto', 'Авто'], dl_ruuk: ['Russian via Ukrainian tag (workaround)', 'Русский через укр. тег (обходной путь)'],
+  o_nosubs: ['Add "No subtitles" when there is speech', 'Добавлять «No subtitles», если есть речь'],
+  o_nobgm: ['No background music', 'Без фоновой музыки'],
+  o_brackets: ['Bracket syntax ( ) < > { }', 'Скобочный синтаксис ( ) < > { }'],
+  c_opts: ['Options', 'Опции'],
+  o_times: ['Show approximate times in shots (2.0)', 'Показывать примерное время в шотах (2.0)'],
+  o_end: ['End-state line per stage (2.5)', 'Строка конечного состояния в отрезке (2.5)'],
+  f_neg: ['Extra constraints (comma-separated)', 'Доп. ограничения (через запятую)'],
+  ph_neg: ['e.g. no text on screen, no extra people', 'напр. no text on screen, no extra people'],
+  c_und: ['What I understood', 'Что я понял'],
+  u_arch: ['Scene', 'Сцена'], u_dur: ['Text says', 'В тексте'], u_apply: ['apply', 'применить'], u_ratio: ['Frame', 'Кадр'],
+  u_light: ['Light', 'Свет'], u_moves: ['Camera', 'Камера'], u_shots: ['Plan', 'План'], u_dlg: ['Dialogue', 'Речь'],
+  u_lines: ['lines', 'реплик'], u_cam_auto: ['auto', 'авто'], u_lang: ['Brief language', 'Язык брифа'], u_shot_w: ['shots', 'шотов'], u_stage_w: ['stages', 'отрезков'],
+  o_prompt: ['Prompt', 'Промпт'], o_tl: ['Timeline', 'Таймлайн'], o_llm: ['LLM mode', 'Режим LLM'], o_json: ['JSON', 'JSON'],
+  llm_hint: ['Paste this into Claude or ChatGPT. It returns the final English prompt with the Seedance rules applied.',
+             'Вставь это в Claude или ChatGPT. Получишь финальный промпт на английском с правилами Seedance.'],
+  btn_copy: ['Copy', 'Копировать'], btn_txt: ['.txt', '.txt'], btn_json: ['.json', '.json'], btn_link: ['Link', 'Ссылка'], btn_save: ['★ Save', '★ Сохранить'],
+  copied: ['Copied', 'Скопировано'], saved: ['Saved to history', 'Сохранено в историю'], linkcopied: ['Link copied', 'Ссылка скопирована'],
+  c_audit: ['Self-check', 'Самопроверка'], no_issues: ['No issues found.', 'Замечаний нет.'], c_notes: ['Notes', 'Заметки'],
+  empty_out: ['Write a description to see the prompt.', 'Напиши описание, чтобы увидеть промпт.'],
+  imp_h: ['Paste a prompt to check', 'Вставь промпт для проверки'],
+  ph_imp: ['Paste any Seedance prompt here. The checker runs the rules for the selected model.', 'Вставь сюда любой промпт Seedance. Проверка идёт по правилам выбранной модели.'],
+  imp_dur: ['Intended duration, s (optional)', 'Планируемая длительность, с (необязательно)'],
+  imp_strip: ['Strip empty words', 'Убрать пустые слова'], imp_cons: ['Add constraints', 'Добавить constraints'], imp_llm: ['Ask an LLM to fix it', 'Попросить LLM исправить'],
+  h_empty: ['Nothing saved yet. Press ★ Save or copy a prompt.', 'Пока пусто. Нажми ★ Сохранить или скопируй промпт.'],
+  h_only_fav: ['Favourites only', 'Только избранное'], h_load: ['Open', 'Открыть'], h_del: ['Delete', 'Удалить'], h_clear: ['Clear all', 'Очистить всё'],
+  h_fav: ['★', '★'], h_confirm: ['Delete the whole history?', 'Удалить всю историю?'],
+  back: ['← iDentity', '← iDentity'],
+  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser.',
+         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер.']
+};
+const EXAMPLES = [
+  { n: ['Perfume ad', 'Реклама духов'], ver: '2.5', dur: 10, refs: [{ role: 'product', note: '' }], music: 'soft piano, slow build',
+    text: ['Perfume ad: a black glass bottle on wet black marble, water drops run down the glass. The camera pushes in to the engraved logo. Finale: golden smoke wraps around the bottle.',
+           'Реклама духов: чёрный стеклянный флакон на мокром чёрном мраморе, капли воды стекают по стеклу. Камера приближается к гравировке логотипа. В финале флакон окутывает золотой дым.'] },
+  { n: ['Rooftop chase', 'Погоня по крышам'], ver: '2.0', dur: 12, refs: [{ role: 'character', note: 'the hero' }], sfx: 'footsteps on gravel, distant sirens',
+    text: ['Rooftop chase at sunset. The hero sprints along the edge and jumps to the next building. Then he slides under a pipe and rolls to his feet. Finally he faces the villain: "You are too late."',
+           'Погоня по крышам на закате. Герой бежит по краю и прыгает на соседнее здание. Затем он проскальзывает под трубой и вскакивает на ноги. В финале он смотрит на злодея: «Ты опоздал.»'] },
+  { n: ['UGC review', 'UGC-обзор'], ver: '2.5', dur: 8, refs: [], music: '',
+    text: ['A young woman in a bright kitchen reviews a coffee machine. She says: "Best purchase this year." Then she presses the button and steam rises.',
+           'Девушка на светлой кухне делает обзор кофемашины. Она говорит: «Лучшая покупка за год». Потом нажимает кнопку, и поднимается пар.'] }
+];
+const BODY_NAMES = { arri: 'ARRI Alexa 35', red: 'RED V-Raptor', sony: 'Sony Venice 2', ana: 'ARRI + anamorphic' };
+
+const $ = id => document.getElementById(id);
+const $$ = (sel, r = document) => [...r.querySelectorAll(sel)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let LANG = 'en', VER = '2.5', MODE = 'compile', OUT = 'prompt', REFS = [], S = null, R = null, timer = 0;
+const t = k => (T[k] || [k, k])[LANG === 'ru' ? 1 : 0];
+const L = arr => arr[LANG === 'ru' ? 1 : 0];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+let toastTimer = 0;
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 1500); }
+
+/* ---------- state <-> form ---------- */
+function ratioVal() { return $('ratio').value === 'custom' ? $('ratioCustom').value.trim() || 'auto' : $('ratio').value; }
+function readUI() {
+  return { ver: VER, text: $('desc').value, dur: +$('durNum').value || 8, ratio: ratioVal(), arch: $('arch').value, detail: $('detail').value, cons: +$('cons').value,
+    body: $('body').value, light: $('light').value, move: $('move').value, refs: REFS.map(r => ({ ...r })), music: $('music').value, sfx: $('sfx').value,
+    dialogue: $('dialogue').value, dlang: $('dlang').value, nosubs: $('nosubs').checked, nobgm: $('nobgm').checked, times: $('times').checked,
+    endState: $('endState').checked, brackets: $('brackets').checked, neg: $('neg').value };
+}
+function writeUI(s) {
+  setVer(s.ver || VER, true);
+  $('desc').value = s.text || '';
+  setDur(s.dur || 10);
+  const known = [...$('ratio').options].some(o => o.value === s.ratio);
+  if (known) { $('ratio').value = s.ratio; $('ratioCustom').hidden = true; }
+  else if (s.ratio && s.ratio !== 'auto' && VER === '2.5') { $('ratio').value = 'custom'; $('ratioCustom').hidden = false; $('ratioCustom').value = s.ratio; }
+  else $('ratio').value = 'auto';
+  for (const id of ['arch', 'detail', 'body', 'light', 'move', 'dlang']) if (s[id] !== undefined && [...$(id).options].some(o => o.value === String(s[id]))) $(id).value = s[id];
+  if (s.cons) $('cons').value = String(s.cons);
+  REFS = (s.refs || []).map(r => ({ role: r.role, note: r.note || '' }));
+  for (const id of ['music', 'sfx', 'dialogue', 'neg']) $(id).value = s[id] || '';
+  for (const id of ['nosubs', 'nobgm', 'times', 'endState', 'brackets']) if (s[id] !== undefined) $(id).checked = !!s[id];
+  renderRefs();
+}
+function setDur(v) { const L_ = LIM[VER]; v = clamp(Math.round(v) || L_.min, L_.min, L_.max); $('dur').value = v; $('durNum').value = v; }
+
+/* ---------- version / language ---------- */
+function setVer(v, silent) {
+  VER = v;
+  $$('#verSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+  const lim = LIM[v];
+  for (const id of ['dur', 'durNum']) { $(id).min = lim.min; $(id).max = lim.max; }
+  setDur(+$('durNum').value);
+  const prev = ratioVal();
+  const sel = $('ratio');
+  sel.innerHTML = `<option value="auto">${esc(t('auto'))}</option>` + lim.ratios.map(r => `<option>${r}</option>`).join('') + (v === '2.5' ? `<option value="custom">${esc(t('custom'))}</option>` : '');
+  sel.value = [...sel.options].some(o => o.value === prev) ? prev : 'auto';
+  $('ratioCustom').hidden = sel.value !== 'custom';
+  $('timesWrap').hidden = v !== '2.0';
+  $('endWrap').hidden = v !== '2.5';
+  REFS.forEach(r => { const ro = ROLES[r.role]; if (ro && ro.ver && ro.ver !== v) r.role = ro.kind === 'video' ? 'vmotion' : 'character'; });
+  if (!silent) { renderRefs(); render(); }
+}
+function rebuildSelects() {
+  const fill = (id, html) => { const el = $(id), prev = el.value; el.innerHTML = html; if ([...el.options].some(o => o.value === prev)) el.value = prev; };
+  const o = (v, n) => `<option value="${v}">${esc(n)}</option>`;
+  fill('arch', o('auto', t('auto')) + ARCH.map(a => o(a.id, L(a.n))).join(''));
+  fill('light', o('auto', t('auto')) + Object.keys(LIGHT_NAMES).map(k => o(k, L(LIGHT_NAMES[k]))).join(''));
+  fill('body', o('auto', t('auto')) + Object.keys(BODY_NAMES).map(k => o(k, BODY_NAMES[k])).join('') + o('phone', t('b_phone')) + o('none', t('b_none')));
+  fill('move', o('auto', t('auto')) + Object.keys(MOVES).map(k => o(k, L(MOVES[k].n))).join(''));
+  const r = $('ratio'); if (r.options[0]) r.options[0].textContent = t('auto');
+  if (r.querySelector('option[value=custom]')) r.querySelector('option[value=custom]').textContent = t('custom');
+}
+function applyLang() {
+  document.documentElement.lang = LANG;
+  $$('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  $$('[data-tp]').forEach(el => { el.placeholder = t(el.dataset.tp); });
+  $$('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === LANG));
+  rebuildSelects(); renderExamples(); renderRefs(); render(); renderHist(); renderImprove();
+}
+
+/* ---------- references ---------- */
+function renderRefs() {
+  const ctr = { image: 0, video: 0, audio: 0 };
+  const roles = Object.entries(ROLES).filter(([, r]) => !r.ver || r.ver === VER);
+  $('refs').innerHTML = REFS.map((r, i) => {
+    const ro = ROLES[r.role] || ROLES.character;
+    ctr[ro.kind]++;
+    const opts = ['image', 'video', 'audio'].map(k => `<optgroup label="${esc(t('g_' + k))}">` + roles.filter(([, x]) => x.kind === k).map(([id, x]) => `<option value="${id}"${id === r.role ? ' selected' : ''}>${esc(L(x.l))}</option>`).join('') + '</optgroup>').join('');
+    return `<div class="ref" data-i="${i}"><span class="tok">@${cap(ro.kind)}${ctr[ro.kind]}</span><select aria-label="role">${opts}</select><input type="text" value="${esc(r.note)}" placeholder="${esc(t('ph_refnote'))}"><button type="button" class="x" aria-label="remove">×</button></div>`;
+  }).join('');
+  $('refCount').textContent = REFS.length ? `${REFS.length} / ${LIM[VER].total} ${t('files')}` : '';
+}
+
+/* ---------- compile & render ---------- */
+function schedule() { clearTimeout(timer); timer = setTimeout(render, 140); }
+function render() {
+  S = readUI();
+  R = build(S);
+  store.set('sdc.state', { ...S, lang: LANG });
+  renderUnderstood(); renderOutputs(); renderAudit(); renderNotes();
+}
+function chip(label, val, cls) { return `<span class="chip ${cls || ''}">${esc(label)} <b>${esc(val)}</b></span>`; }
+function renderUnderstood() {
+  const I = R.intent, out = [];
+  out.push(chip(t('u_arch'), `${L(R.arch.n)}${I.arch ? ' · ' + I.conf + '%' : ''}`, I.arch ? '' : 'dim'));
+  if (I.dur) out.push(I.dur !== R.dur && I.dur >= LIM[VER].min && I.dur <= LIM[VER].max ? `<button type="button" class="chip" data-apply="${I.dur}">${esc(t('u_dur'))} <b>${I.dur} s</b> → ${esc(t('u_apply'))}</button>` : chip(t('u_dur'), I.dur + ' s'));
+  if (!R.empty) {
+    out.push(chip(t('u_ratio'), `${R.ratio} · ${R.dur} s`));
+    out.push(chip(t('u_light'), R.light.map(k => L(LIGHT_NAMES[k] || WEATHER_NAMES[k] || [k, k])).join(' + ')));
+    out.push(chip(t('u_moves'), I.moves.length ? I.moves.map(m => L(MOVES[m].n)).join(' → ') : t('u_cam_auto'), I.moves.length ? '' : 'dim'));
+    out.push(chip(t('u_shots'), `${R.n} ${VER === '2.5' ? t('u_stage_w') : t('u_shot_w')}`));
+    const lines = R.shots.reduce((n, s) => n + s.lines.length, 0) + (S.dialogue.trim() ? S.dialogue.trim().split('\n').length : 0);
+    if (lines) out.push(chip(t('u_dlg'), `${lines} ${t('u_lines')}`));
+  }
+  out.push(chip(t('u_lang'), I.lang.toUpperCase(), 'dim'));
+  $('understood').innerHTML = out.join('');
+}
+function jsonOut() {
+  return JSON.stringify({ tool: 'MiSE', model: 'Seedance ' + S.ver, duration_s: R.dur, aspect_ratio: R.ratio, scene_type: R.arch.id,
+    shots: R.shots.map(s => ({ n: s.n, start_s: s.t0, end_s: s.t1, shot_size: s.size, camera: s.move, action: s.text, dialogue: s.lines })),
+    references: S.refs.filter(r => ROLES[r.role] && (!ROLES[r.role].ver || ROLES[r.role].ver === S.ver)).map(r => ({ kind: ROLES[r.role].kind, role: r.role, note: r.note })),
+    prompt: R.prompt, audit: { score: R.audit.score, issues: R.audit.issues.map(i => ({ severity: i.sev, id: i.id, message: i.msg[0] })) } }, null, 2);
+}
+function renderOutputs() {
+  const empty = !!R.empty;
+  $('outPrompt').textContent = empty ? t('empty_out') : R.prompt;
+  $('outPrompt').style.color = empty ? 'var(--mute)' : '';
+  const lim = LIM[VER];
+  $('stats').textContent = empty ? '' : `${R.prompt.length} / ${R.prompt.split(/\s+/).filter(Boolean).length} ${LANG === 'ru' ? 'симв. / слов' : 'chars / words'}`;
+  $('limit').textContent = empty ? '' : `${LANG === 'ru' ? 'рекомендуемо до' : 'recommended up to'} ${lim.chars}`;
+  $('meter').className = 'meter' + (!empty && R.prompt.length > lim.chars ? ' over' : '');
+  $('meter').firstElementChild.style.width = empty ? '0' : Math.min(100, R.prompt.length / lim.chars * 100) + '%';
+  $('tlBar').innerHTML = empty ? '' : R.shots.map(s => `<div style="flex:${s.t1 - s.t0}" title="${esc(s.size)}"><b>${s.t0}–${s.t1}s</b><span>${esc(s.size)}</span></div>`).join('');
+  $('tlList').innerHTML = empty ? `<p class="empty">${esc(t('empty_out'))}</p>` : R.shots.map(s => `<div class="shot"><span class="t">${s.t0}–${s.t1}s</span>${esc(s.size)} · ${esc(s.move)}<br>${esc(s.text)}${s.lines.length ? '<br><i>' + esc(s.lines.map(q => '“' + q + '”').join(' ')) + '</i>' : ''}</div>`).join('');
+  $('outLlm').textContent = empty ? t('empty_out') : buildMeta(S, R, LANG);
+  $('outJson').textContent = empty ? t('empty_out') : jsonOut();
+}
+function issueList(el, scoreEl, audit) {
+  const sc = audit.score;
+  scoreEl.textContent = audit.issues.length || sc ? sc + ' / 100' : '';
+  scoreEl.className = 'score ' + (sc >= 85 ? 'hi' : sc >= 60 ? 'mid' : 'lo');
+  el.innerHTML = audit.issues.length ? audit.issues.map(i => `<li><span class="dot ${i.sev}"></span><span>${esc(L(i.msg))}</span></li>`).join('') : `<li><span class="dot" style="background:var(--ok)"></span><span>${esc(t('no_issues'))}</span></li>`;
+}
+function renderAudit() { if (R.empty) { $('score').textContent = ''; $('score').className = 'score'; $('issues').innerHTML = ''; } else issueList($('issues'), $('score'), R.audit); }
+function renderNotes() {
+  const n = R.notes.filter(x => !(R.empty && x.sev === 'tip'));
+  $('notesCard').hidden = !n.length;
+  $('notes').innerHTML = n.map(x => `<li><span class="dot ${x.sev}"></span><span>${esc(L(x.msg))}</span></li>`).join('');
+}
+
+/* ---------- examples, copy, export ---------- */
+function renderExamples() {
+  $('examples').innerHTML = EXAMPLES.map((e, i) => `<button type="button" class="chip" data-ex="${i}">${esc(L(e.n))} · ${e.ver}</button>`).join('');
+}
+function loadExample(i) {
+  const e = EXAMPLES[i];
+  const s = { ...readUI(), ver: e.ver, text: L(e.text), dur: e.dur, refs: e.refs, music: e.music || '', sfx: e.sfx || '', dialogue: '', arch: 'auto', ratio: 'auto', light: 'auto', move: 'auto', body: 'auto', neg: '' };
+  writeUI(s); render();
+}
+async function copyText(txt) {
+  try { await navigator.clipboard.writeText(txt); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (_) { /* no clipboard */ } ta.remove(); }
+  toast(t('copied'));
+}
+function download(name, txt, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function currentText() { return OUT === 'llm' ? $('outLlm').textContent : OUT === 'json' ? $('outJson').textContent : R.prompt; }
+function fileStem() { return `seedance-${S.ver.replace('.', '')}-${R.dur}s`; }
+
+/* ---------- history ---------- */
+const hist = { get: () => store.get('sdc.hist', []), set: v => store.set('sdc.hist', v.slice(0, 60)) };
+function saveHist(silent) {
+  if (!R || R.empty) return;
+  const h = hist.get();
+  if (h[0] && h[0].prompt === R.prompt) { if (!silent) toast(t('saved')); return; }
+  h.unshift({ id: Date.now(), ts: new Date().toISOString(), ver: S.ver, state: S, prompt: R.prompt, fav: false });
+  hist.set(h); renderHist(); if (!silent) toast(t('saved'));
+}
+function renderHist() {
+  const only = $('favOnly').checked;
+  const h = hist.get().filter(x => !only || x.fav);
+  $('hist').innerHTML = h.length ? h.map(x => `<div class="it" data-id="${x.id}">
+    <div class="meta"><span class="badge">Seedance ${esc(x.ver)}</span><span>${esc(new Date(x.ts).toLocaleString(LANG === 'ru' ? 'ru-RU' : 'en-GB'))}</span><span>${x.state.dur} s</span></div>
+    <div>${esc(x.state.text.slice(0, 160))}${x.state.text.length > 160 ? '…' : ''}</div>
+    <div class="acts" style="margin:0"><button type="button" class="btn sm" data-a="open">${esc(t('h_load'))}</button><button type="button" class="btn ghost sm" data-a="copy">${esc(t('btn_copy'))}</button><button type="button" class="btn ghost sm" data-a="fav" aria-pressed="${x.fav}">${x.fav ? '★' : '☆'}</button><button type="button" class="btn ghost sm" data-a="del">${esc(t('h_del'))}</button></div></div>`).join('')
+    : `<p class="empty">${esc(t('h_empty'))}</p>`;
+}
+
+/* ---------- improve mode ---------- */
+let impAudit = null;
+function renderImprove() {
+  const p = $('impText').value, dur = +$('impDur').value || null;
+  if (!p.trim()) { $('impIssues').innerHTML = ''; $('impScore').textContent = ''; $('impScore').className = 'score'; $('impMeta').textContent = ''; impAudit = null; return; }
+  impAudit = lint(p, VER, dur);
+  issueList($('impIssues'), $('impScore'), impAudit);
+  $('impMeta').textContent = buildImproveMeta(p, VER, dur || '?', impAudit.issues, LANG);
+}
+
+/* ---------- share link ---------- */
+const enc = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const dec = s => JSON.parse(decodeURIComponent(escape(atob(s))));
+
+/* ---------- wiring ---------- */
+function setMode(m) {
+  MODE = m;
+  $$('#modeTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
+  for (const p of ['compile', 'improve', 'history']) $('pane-' + p).hidden = p !== m;
+  if (m === 'improve') renderImprove();
+  if (m === 'history') renderHist();
+}
+function setOut(o) {
+  OUT = o;
+  $$('#outTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.o === o));
+  for (const p of ['prompt', 'tl', 'llm', 'json']) $('o-' + p).hidden = p !== o;
+}
+
+function init() {
+  const saved = store.get('sdc.state', null);
+  LANG = (saved && saved.lang) || (/^ru|^uk|^be/i.test(navigator.language || '') ? 'ru' : 'en');
+  let initial = saved;
+  const m = /#s=([^&]+)/.exec(location.hash);
+  if (m) { try { initial = dec(m[1]); } catch (e) { /* bad link */ } }
+  rebuildSelects(); setVer((initial && initial.ver) || '2.5', true);
+  $$('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  $$('[data-tp]').forEach(el => { el.placeholder = t(el.dataset.tp); });
+  $$('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === LANG));
+  rebuildSelects(); renderExamples();
+  if (initial && initial.text) writeUI(initial); else { setVer('2.5', true); loadExampleSilently(); }
+  applyLang();
+
+  $$('.lang button').forEach(b => b.addEventListener('click', () => { LANG = b.dataset.l; applyLang(); }));
+  $$('#verSeg button').forEach(b => b.addEventListener('click', () => { setVer(b.dataset.v); renderImprove(); }));
+  $$('#modeTabs button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
+  $$('#outTabs button').forEach(b => b.addEventListener('click', () => setOut(b.dataset.o)));
+
+  $('dur').addEventListener('input', () => { $('durNum').value = $('dur').value; schedule(); });
+  $('durNum').addEventListener('input', () => { const v = clamp(+$('durNum').value || 0, LIM[VER].min, LIM[VER].max); if ($('durNum').value) $('dur').value = v; schedule(); });
+  $('durNum').addEventListener('change', () => { setDur(+$('durNum').value); schedule(); });
+  $('ratio').addEventListener('change', () => { $('ratioCustom').hidden = $('ratio').value !== 'custom'; schedule(); });
+  for (const id of ['desc', 'ratioCustom', 'arch', 'detail', 'cons', 'body', 'light', 'move', 'music', 'sfx', 'dialogue', 'dlang', 'nosubs', 'nobgm', 'times', 'endState', 'brackets', 'neg'])
+    for (const ev of ['input', 'change']) $(id).addEventListener(ev, schedule);
+
+  $('addRef').addEventListener('click', () => { REFS.push({ role: 'character', note: '' }); renderRefs(); render(); });
+  $('refs').addEventListener('change', e => { const row = e.target.closest('.ref'); if (row && e.target.tagName === 'SELECT') { REFS[+row.dataset.i].role = e.target.value; renderRefs(); render(); } });
+  $('refs').addEventListener('input', e => { const row = e.target.closest('.ref'); if (row && e.target.tagName === 'INPUT') { REFS[+row.dataset.i].note = e.target.value; schedule(); } });
+  $('refs').addEventListener('click', e => { if (e.target.classList.contains('x')) { REFS.splice(+e.target.closest('.ref').dataset.i, 1); renderRefs(); render(); } });
+
+  $('examples').addEventListener('click', e => { const b = e.target.closest('[data-ex]'); if (b) loadExample(+b.dataset.ex); });
+  $('understood').addEventListener('click', e => { const b = e.target.closest('[data-apply]'); if (b) { setDur(+b.dataset.apply); render(); } });
+
+  $('bCopy').addEventListener('click', () => { if (R.empty) return; copyText(currentText()); saveHist(true); });
+  $('bTxt').addEventListener('click', () => { if (R.empty) return; download(fileStem() + '.txt', R.prompt, 'text/plain'); saveHist(true); });
+  $('bJson').addEventListener('click', () => { if (R.empty) return; download(fileStem() + '.json', jsonOut(), 'application/json'); saveHist(true); });
+  $('bLink').addEventListener('click', () => { copyText(location.origin === 'null' ? location.href.split('#')[0] + '#s=' + enc(S) : location.origin + location.pathname + '#s=' + enc(S)); toast(t('linkcopied')); });
+  $('bSave').addEventListener('click', () => saveHist(false));
+
+  $('hist').addEventListener('click', e => {
+    const btn = e.target.closest('[data-a]'); if (!btn) return;
+    const id = +btn.closest('.it').dataset.id, h = hist.get(), item = h.find(x => x.id === id);
+    if (!item) return;
+    if (btn.dataset.a === 'open') { writeUI(item.state); setMode('compile'); render(); window.scrollTo(0, 0); }
+    else if (btn.dataset.a === 'copy') copyText(item.prompt);
+    else if (btn.dataset.a === 'fav') { item.fav = !item.fav; hist.set(h); renderHist(); }
+    else if (btn.dataset.a === 'del') { hist.set(h.filter(x => x.id !== id)); renderHist(); }
+  });
+  $('favOnly').addEventListener('change', renderHist);
+  $('histClear').addEventListener('click', () => { if (confirm(t('h_confirm'))) { hist.set([]); renderHist(); } });
+
+  $('impText').addEventListener('input', renderImprove);
+  $('impDur').addEventListener('input', renderImprove);
+  $('impStrip').addEventListener('click', () => { $('impText').value = stripSlop($('impText').value); renderImprove(); });
+  $('impCons').addEventListener('click', () => { $('impText').value = addConstraints($('impText').value); renderImprove(); });
+  $('impCopy').addEventListener('click', () => copyText($('impText').value));
+  $('impMetaCopy').addEventListener('click', () => copyText($('impMeta').textContent));
+}
+function loadExampleSilently() { const e = EXAMPLES[0]; writeUI({ ver: e.ver, text: L(e.text), dur: e.dur, refs: e.refs, music: e.music || '' }); }
+
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
