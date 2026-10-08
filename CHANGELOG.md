@@ -8,6 +8,7 @@
 - Fixed the GitHub Pages address in README, README_ru and the PDF guide to match the real repository name (`/Mise/`).
 - Re-wrapped `LICENSE` to short lines so it no longer scrolls sideways on phones.
 - Rebuilt the drop-down styling as a single background rule with an inline arrow icon (the previous fix still showed system-grey lists with an oversized arrow on iPhone).
+- Replaced the native drop-downs with custom faces (the system list still opens on tap), because Safari kept repainting them grey with a giant arrow. Footer now shows the version (v1.2.2).
 
 ## 1.1.0 - 2026-10-08
 

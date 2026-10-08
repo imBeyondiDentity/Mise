@@ -46,7 +46,11 @@ label:first-of-type{margin-top:0}
 textarea,input[type=text],input[type=number],select{-webkit-appearance:none;appearance:none;border-radius:9px;width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:13px/1.5 var(--mono);outline:none;transition:border-color .15s}
 textarea{resize:vertical;min-height:110px}
 textarea:focus,input:focus,select:focus{border-color:var(--acc)}
-select{-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;background:#0e0d0c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238d867e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center/10px 6px!important;color:#ece7e1!important;-webkit-text-fill-color:#ece7e1;border-radius:9px;padding-right:34px;text-overflow:ellipsis;opacity:1}
+.sel{position:relative;display:block;min-width:0}
+.sel .face{display:block;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238d867e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center/10px 6px;border:1px solid var(--line);border-radius:9px;padding:10px 34px 10px 12px;font:13px/1.5 var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:44px;transition:border-color .15s}
+.sel:focus-within .face{border-color:var(--acc)}
+.sel select{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;margin:0;padding:0;border:0;cursor:pointer;font-size:16px;-webkit-appearance:none;appearance:none;background:transparent}
+@media(max-width:700px){.sel .face{font-size:16px}}
 .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .row3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .dur{display:grid;grid-template-columns:1fr 78px;gap:12px;align-items:center}
@@ -999,8 +1003,8 @@ const T = {
   h_only_fav: ['Favourites only', 'Только избранное'], h_load: ['Open', 'Открыть'], h_del: ['Delete', 'Удалить'], h_clear: ['Clear all', 'Очистить всё'],
   h_fav: ['★', '★'], h_confirm: ['Delete the whole history?', 'Удалить всю историю?'],
   back: ['Github', 'Github'],
-  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser. v1.2.1',
-         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер. v1.2.1']
+  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser. v1.2.2',
+         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер. v1.2.2']
 };
 const EXAMPLES = [
   { n: ['Perfume ad', 'Реклама духов'], ver: '2.5', dur: 10, refs: [{ role: 'product', note: '' }], music: 'soft piano, slow build',
@@ -1290,6 +1294,32 @@ function init() {
 function loadExampleSilently() { const e = EXAMPLES[0]; writeUI({ ver: e.ver, text: L(e.text), dur: e.dur, refs: e.refs, music: e.music || '' }); }
 
 document.addEventListener('DOMContentLoaded', init);
+
+/* Custom select faces: the native <select> stays on top (invisible) so the OS picker opens,
+   while the visible face is our own element, so Safari cannot restyle it. */
+(function () {
+  const ARROW = '';
+  function face(sel) { return sel.parentNode && sel.parentNode.classList.contains('sel') ? sel.parentNode.firstChild : null; }
+  function sync(sel) {
+    const f = face(sel); if (!f) return;
+    const o = sel.options[sel.selectedIndex]; const txt = o ? o.textContent : '';
+    if (f.textContent !== txt) f.textContent = txt;
+  }
+  function enhance(sel) {
+    if (sel.parentNode.classList.contains('sel')) { sync(sel); return; }
+    const w = document.createElement('span'); w.className = 'sel';
+    const f = document.createElement('span'); f.className = 'face'; f.setAttribute('aria-hidden', 'true');
+    sel.parentNode.insertBefore(w, sel); w.appendChild(f); w.appendChild(sel);
+    sel.addEventListener('change', () => sync(sel));
+    sync(sel);
+  }
+  function all() { document.querySelectorAll('select').forEach(enhance); }
+  document.addEventListener('DOMContentLoaded', () => {
+    all();
+    new MutationObserver(all).observe(document.body, { childList: true, subtree: true, characterData: true });
+    setInterval(() => document.querySelectorAll('select').forEach(sync), 300);
+  });
+})();
 
 </script>
 </body>
