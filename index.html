@@ -126,11 +126,34 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 .vtag{position:absolute;top:18px;left:16px;z-index:20;display:flex;align-items:center;height:36px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:0 14px;font-size:11px;letter-spacing:.1em;color:var(--mute);user-select:none}
 
+
+@media(max-width:560px){#outTabs button{padding:8px 7px;font-size:12px}}
+
+#outTabs button{letter-spacing:.04em}
+
+/* size scale: actions 40px, chips and small buttons 34px, footer chips 40px */
+.btn{min-height:40px}
+.btn.sm{min-height:34px}
+.chip{min-height:34px;padding:0 14px;font-size:12px}
+.end .chip{min-height:40px;padding:0 18px;font-size:13px}
+.acts:has(#bCopy){display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.acts:has(#bCopy) .btn{min-height:40px;padding:0 2px;font-size:12px;white-space:nowrap}
+@media(max-width:420px){.acts:has(#bCopy){gap:4px}.acts:has(#bCopy) .btn{font-size:11.5px}.card{padding:16px 14px}}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{all:unset;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:58px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card2);min-width:0}
+.tile i{font-style:normal;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.tile b{font-size:13px;font-weight:600;color:var(--acc);line-height:1.3;overflow-wrap:anywhere}
+.tile.dim b{color:var(--mute);font-weight:500}
+button.tile{cursor:pointer;border-color:var(--acc);font-family:var(--mono)}
+button.tile:hover{background:#1f1814}
+button.tile:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
 </style>
 </head>
 <body>
 <main class="wrap">
-<div class="vtag" title="MiSE">v1.2.7</div>
+<div class="vtag" title="MiSE">v1.2.4</div>
 <div class="lang" role="group" aria-label="Language">
   <button type="button" data-l="en" aria-pressed="true">EN</button>
   <button type="button" data-l="ru" aria-pressed="false">RU</button>
@@ -213,7 +236,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div class="col sticky">
       <div class="card">
         <h2><span data-t="c_und"></span></h2>
-        <div class="chips" id="understood"></div>
+        <div class="tiles" id="understood"></div>
       </div>
 
       <div class="card">
@@ -234,6 +257,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           <button type="button" class="btn ghost" id="bLink" data-t="btn_link"></button>
           <button type="button" class="btn ghost" id="bSave" data-t="btn_save"></button>
         </div>
+        <p class="hint" data-t="acts_hint"></p>
       </div>
 
       <div class="card">
@@ -1006,10 +1030,11 @@ const T = {
   u_arch: ['Scene', 'Сцена'], u_dur: ['Text says', 'В тексте'], u_apply: ['apply', 'применить'], u_ratio: ['Frame', 'Кадр'],
   u_light: ['Light', 'Свет'], u_moves: ['Camera', 'Камера'], u_shots: ['Plan', 'План'], u_dlg: ['Dialogue', 'Речь'],
   u_lines: ['lines', 'реплик'], u_cam_auto: ['auto', 'авто'], u_lang: ['Brief language', 'Язык брифа'], u_shot_w: ['shots', 'шотов'], u_stage_w: ['stages', 'отрезков'],
-  o_prompt: ['Prompt', 'Промпт'], o_tl: ['Timeline', 'Таймлайн'], o_llm: ['LLM mode', 'Режим LLM'], o_json: ['JSON', 'JSON'],
+  o_prompt: ['Prompt', 'Промпт'], o_tl: ['Timeline', 'Таймлайн'], o_llm: ['LLM', 'LLM'], o_json: ['JSON', 'JSON'],
   llm_hint: ['Paste this into Claude or ChatGPT. It returns the final English prompt with the Seedance rules applied.',
              'Вставь это в Claude или ChatGPT. Получишь финальный промпт на английском с правилами Seedance.'],
-  btn_copy: ['Copy', 'Копировать'], btn_txt: ['.txt', '.txt'], btn_json: ['.json', '.json'], btn_link: ['Link', 'Ссылка'], btn_save: ['★ Save', '★ Сохранить'],
+  acts_hint: ['Copy: the text on this tab. Link: all your settings in one address. Save: adds it to History.', 'Копия: текст с этой вкладки. Ссылка: все настройки в одном адресе. Сохр.: добавляет в Историю.'],
+  btn_copy: ['Copy', 'Копия'], btn_txt: ['.txt', '.txt'], btn_json: ['.json', '.json'], btn_link: ['Link', 'Ссылка'], btn_save: ['Save', 'Сохр.'],
   copied: ['Copied', 'Скопировано'], saved: ['Saved to history', 'Сохранено в историю'], linkcopied: ['Link copied', 'Ссылка скопирована'],
   c_audit: ['Self-check', 'Самопроверка'], no_issues: ['No issues found.', 'Замечаний нет.'], c_notes: ['Notes', 'Заметки'],
   empty_out: ['Write a description to see the prompt.', 'Напиши описание, чтобы увидеть промпт.'],
@@ -1132,18 +1157,20 @@ function render() {
   store.set('sdc.state', { ...S, lang: LANG });
   renderUnderstood(); renderOutputs(); renderAudit(); renderNotes();
 }
-function chip(label, val, cls) { return `<span class="chip ${cls || ''}">${esc(label)} <b>${esc(val)}</b></span>`; }
+function sec() { return LANG === 'ru' ? 'с' : 's'; }
+function pl(n, en, ru) { if (LANG !== 'ru') return n === 1 ? en[0] : en[1]; const a = n % 100, b = n % 10; return a >= 11 && a <= 14 ? ru[2] : b === 1 ? ru[0] : b >= 2 && b <= 4 ? ru[1] : ru[2]; }
+function chip(label, val, cls) { return `<span class="tile ${cls || ''}"><i>${esc(label)}</i><b>${esc(val)}</b></span>`; }
 function renderUnderstood() {
   const I = R.intent, out = [];
   out.push(chip(t('u_arch'), `${L(R.arch.n)}${I.arch ? ' · ' + I.conf + '%' : ''}`, I.arch ? '' : 'dim'));
-  if (I.dur) out.push(I.dur !== R.dur && I.dur >= LIM[VER].min && I.dur <= LIM[VER].max ? `<button type="button" class="chip" data-apply="${I.dur}">${esc(t('u_dur'))} <b>${I.dur} s</b> → ${esc(t('u_apply'))}</button>` : chip(t('u_dur'), I.dur + ' s'));
+  if (I.dur) out.push(I.dur !== R.dur && I.dur >= LIM[VER].min && I.dur <= LIM[VER].max ? `<button type="button" class="tile act" data-apply="${I.dur}"><i>${esc(t('u_dur'))}</i><b>${I.dur} ${sec()} → ${esc(t('u_apply'))}</b></button>` : chip(t('u_dur'), I.dur + ' ' + sec()));
   if (!R.empty) {
-    out.push(chip(t('u_ratio'), `${R.ratio} · ${R.dur} s`));
+    out.push(chip(t('u_ratio'), `${R.ratio} · ${R.dur} ${sec()}`));
     out.push(chip(t('u_light'), R.light.map(k => L(LIGHT_NAMES[k] || WEATHER_NAMES[k] || [k, k])).join(' + ')));
     out.push(chip(t('u_moves'), I.moves.length ? I.moves.map(m => L(MOVES[m].n)).join(' → ') : t('u_cam_auto'), I.moves.length ? '' : 'dim'));
-    out.push(chip(t('u_shots'), `${R.n} ${VER === '2.5' ? t('u_stage_w') : t('u_shot_w')}`));
+    out.push(chip(t('u_shots'), `${R.n} ${VER === '2.5' ? pl(R.n, ['stage', 'stages'], ['отрезок', 'отрезка', 'отрезков']) : pl(R.n, ['shot', 'shots'], ['шот', 'шота', 'шотов'])}`));
     const lines = R.shots.reduce((n, s) => n + s.lines.length, 0) + (S.dialogue.trim() ? S.dialogue.trim().split('\n').length : 0);
-    if (lines) out.push(chip(t('u_dlg'), `${lines} ${t('u_lines')}`));
+    if (lines) out.push(chip(t('u_dlg'), `${lines} ${pl(lines, ['line', 'lines'], ['реплика', 'реплики', 'реплик'])}`));
   }
   out.push(chip(t('u_lang'), I.lang.toUpperCase(), 'dim'));
   $('understood').innerHTML = out.join('');
@@ -1159,8 +1186,8 @@ function renderOutputs() {
   $('outPrompt').textContent = empty ? t('empty_out') : R.prompt;
   $('outPrompt').style.color = empty ? 'var(--mute)' : '';
   const lim = LIM[VER];
-  $('stats').textContent = empty ? '' : `${R.prompt.length} / ${R.prompt.split(/\s+/).filter(Boolean).length} ${LANG === 'ru' ? 'симв. / слов' : 'chars / words'}`;
-  $('limit').textContent = empty ? '' : `${LANG === 'ru' ? 'рекомендуемо до' : 'recommended up to'} ${lim.chars}`;
+  $('stats').textContent = empty ? '' : (LANG === 'ru' ? `${R.prompt.length} симв. · ${R.prompt.split(/\s+/).filter(Boolean).length} слов` : `${R.prompt.length} chars · ${R.prompt.split(/\s+/).filter(Boolean).length} words`);
+  $('limit').textContent = empty ? '' : `${LANG === 'ru' ? 'лимит' : 'limit'} ${lim.chars}`;
   $('meter').className = 'meter' + (!empty && R.prompt.length > lim.chars ? ' over' : '');
   $('meter').firstElementChild.style.width = empty ? '0' : Math.min(100, R.prompt.length / lim.chars * 100) + '%';
   $('tlBar').innerHTML = empty ? '' : R.shots.map(s => `<div style="flex:${s.t1 - s.t0}" title="${esc(s.size)}"><b>${s.t0}–${s.t1}s</b><span>${esc(s.size)}</span></div>`).join('');
@@ -1217,7 +1244,7 @@ function renderHist() {
   const only = $('favOnly').checked;
   const h = hist.get().filter(x => !only || x.fav);
   $('hist').innerHTML = h.length ? h.map(x => `<div class="it" data-id="${x.id}">
-    <div class="meta"><span class="badge">Seedance ${esc(x.ver)}</span><span>${esc(new Date(x.ts).toLocaleString(LANG === 'ru' ? 'ru-RU' : 'en-GB'))}</span><span>${x.state.dur} s</span></div>
+    <div class="meta"><span class="badge">Seedance ${esc(x.ver)}</span><span>${esc(new Date(x.ts).toLocaleString(LANG === 'ru' ? 'ru-RU' : 'en-GB'))}</span><span>${x.state.dur} ${sec()}</span></div>
     <div>${esc(x.state.text.slice(0, 160))}${x.state.text.length > 160 ? '…' : ''}</div>
     <div class="acts" style="margin:0"><button type="button" class="btn sm" data-a="open">${esc(t('h_load'))}</button><button type="button" class="btn ghost sm" data-a="copy">${esc(t('btn_copy'))}</button><button type="button" class="btn ghost sm" data-a="fav" aria-pressed="${x.fav}">${x.fav ? '★' : '☆'}</button><button type="button" class="btn ghost sm" data-a="del">${esc(t('h_del'))}</button></div></div>`).join('')
     : `<p class="empty">${esc(t('h_empty'))}</p>`;

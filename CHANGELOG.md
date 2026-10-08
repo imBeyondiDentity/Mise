@@ -2,18 +2,32 @@
 
 # Changelog
 
+## 1.2.4 - 2026-10-08
+
+- Chip sizes worked out as one scale: action buttons 40 px, chips and small buttons 34 px, footer chips 40 px. Copy, .txt, .json, Link and Save now share one row at equal size; "Save" is back as a text chip (no star). A one-line hint explains Copy, Link and Save. The "LLM mode" tab is now just "LLM", and the counter reads "1424 chars · 219 words" with the limit on the right.
+- "What I understood" rebuilt as an even grid of equal tiles (label above, value below) instead of ragged pills; the "text says 12 s" suggestion is an outlined tile. Fixed counts and units: "1 line", "3 stages", RU "1 реплика", "3 отрезка", "12 с".
+
+## 1.2.3 - 2026-10-08
+
+- Added the brand icon: orange viewfinder corners with a play mark on the dark rounded square. Embedded in the page as the favicon and the iPhone home-screen icon; `MiSE_icon.svg` and `MiSE_icon.png` (512 px) added for reuse.
+
+## 1.2.2 - 2026-10-08
+
+- Footer rebuilt as in the other projects: the chips are part of the page (no longer floating), "Github" on the left, "Contact" ("Написать") on the right linking to the author's email, and the project name MiSE with orange dots between them.
+- Language switch pinned to the header (scrolls with the page instead of floating), as in the other projects.
+- The "Model" label now sits centred above the version switch.
+- Version tag moved from the footer into the top-left corner of the header, mirroring the language switch.
+
+## 1.2.1 - 2026-10-08
+
+- Rebuilt the drop-down styling as a single background rule with an inline arrow icon (the previous fix still showed system-grey lists with an oversized arrow on iPhone).
+- Replaced the native drop-downs with custom faces (the system list still opens on tap), because Safari kept repainting them grey with a giant arrow.
+
 ## 1.2.0 - 2026-10-08
 
 - The bottom-right chip now reads "Github" and opens the repository `imBeyondiDentity/Mise` in a new tab (it used to be "← iDentity" pointing to `../`).
 - Fixed the GitHub Pages address in README, README_ru and the PDF guide to match the real repository name (`/Mise/`).
 - Re-wrapped `LICENSE` to short lines so it no longer scrolls sideways on phones.
-- Rebuilt the drop-down styling as a single background rule with an inline arrow icon (the previous fix still showed system-grey lists with an oversized arrow on iPhone).
-- Replaced the native drop-downs with custom faces (the system list still opens on tap), because Safari kept repainting them grey with a giant arrow. Footer now shows the version (v1.2.2).
-- Footer rebuilt as in the other projects: the chips are part of the page (no longer floating), "Github" on the left, "Contact" ("Написать") on the right linking to the author's email, and the project name MiSE with orange dots between them.
-- Language switch pinned to the header (scrolls with the page instead of floating), as in the other projects.
-- The "Model" label now sits centred above the version switch.
-- Version tag (v1.2.7) moved from the footer into the top-left corner of the header, mirroring the language switch.
-- Added the brand icon: orange viewfinder corners with a play mark on the dark rounded square. Embedded in the page as the favicon and the iPhone home-screen icon; `MiSE_icon.svg` and `MiSE_icon.png` (512 px) added for reuse.
 
 ## 1.1.0 - 2026-10-08
 
