@@ -149,11 +149,27 @@ button.tile{cursor:pointer;border-color:var(--acc);font-family:var(--mono)}
 button.tile:hover{background:#1f1814}
 button.tile:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
+/* v1.3: examples grid, reference cards, add row, 8-field look grid */
+#examples{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#examples .chip{width:100%;justify-content:center;text-align:center;white-space:normal;line-height:1.25;min-height:34px;padding-left:8px;padding-right:8px}
+.row3:has(#lens){grid-template-columns:1fr 1fr}
+.ref{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;align-items:stretch}
+.ref .rh{display:flex;align-items:center;justify-content:space-between}
+.ref .x{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.ref .sel,.ref input{width:100%}
+@media(max-width:560px){.ref{grid-template-columns:minmax(0,1fr)}.ref input{grid-column:auto;grid-row:auto}}
+.addrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.addrow .btn{width:100%;justify-content:center}
+.row3:has(#lens){grid-template-columns:repeat(2,minmax(0,1fr))}
+.row3:has(#lens)>div{min-width:0}
+.addrow{grid-template-columns:repeat(3,minmax(0,1fr))}
+.addrow .btn{min-width:0;padding-left:6px;padding-right:6px;box-sizing:border-box;border-radius:999px}
+
 </style>
 </head>
 <body>
 <main class="wrap">
-<div class="vtag" title="MiSE">v1.2.4</div>
+<div class="vtag" title="MiSE">v1.3.0</div>
 <div class="lang" role="group" aria-label="Language">
   <button type="button" data-l="en" aria-pressed="true">EN</button>
   <button type="button" data-l="ru" aria-pressed="false">RU</button>
@@ -199,13 +215,20 @@ button.tile:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div><label for="body" data-t="f_body"></label><select id="body"></select></div>
           <div><label for="light" data-t="f_light"></label><select id="light"></select></div>
           <div><label for="move" data-t="f_move"></label><select id="move"></select></div>
+          <div><label for="color" data-t="f_color"></label><select id="color"></select></div>
+          <div><label for="pace" data-t="f_pace"></label><select id="pace"></select></div>
+          <div><label for="lens" data-t="f_lens"></label><select id="lens"></select></div>
         </div>
       </div>
 
       <div class="card">
         <h2><span data-t="c_refs"></span><span class="hint" id="refCount" style="margin:0"></span></h2>
         <div id="refs"></div>
-        <button type="button" class="btn ghost sm" id="addRef" data-t="add_ref"></button>
+        <div class="addrow" id="addRow">
+          <button type="button" class="btn ghost sm" data-add="image" data-t="add_img"></button>
+          <button type="button" class="btn ghost sm" data-add="video" data-t="add_vid"></button>
+          <button type="button" class="btn ghost sm" data-add="audio" data-t="add_aud"></button>
+        </div>
         <p class="hint" data-t="refs_hint"></p>
       </div>
 
@@ -361,6 +384,18 @@ const BODY = {
   ana:   'Shot on ARRI Alexa 35 with anamorphic lenses, 2.39:1 look, oval bokeh and horizontal flares',
   phone: 'Shot on a modern smartphone, natural handheld framing',
   none:  ''
+};
+const LENS = {
+  wide:  '24mm wide-angle lens, expansive perspective, subtle edge distortion',
+  std:   '35mm lens, natural field of view, neutral perspective',
+  tele:  '85mm portrait lens, compressed background, creamy bokeh',
+  macro: '100mm macro lens, razor-thin focus plane, extreme close detail',
+  ana:   'anamorphic lens, oval bokeh, horizontal flares'
+};
+const PACE = {
+  calm:   { div: 5,   p: 'slow, unhurried pacing with long held shots' },
+  steady: { div: 3.5, p: 'measured, even pacing' },
+  fast:   { div: 2,   p: 'rapid pacing with quick cuts' }
 };
 const BLOCK = {
   film:  'Kodak Vision3 500T grain, cinematic halation on highlights, Kodak 2383 print emulation',
@@ -703,7 +738,8 @@ function build(S) {
 
   // shots
   let beats = I.beats.map(b => ({ ...b, lines: b.lines.slice() }));
-  const maxN = Math.max(1, Math.min(L.maxShots, Math.floor(dur / 2)));
+  const paceDiv = PACE[S.pace] ? PACE[S.pace].div : 2;
+  const maxN = Math.max(1, Math.min(L.maxShots, Math.floor(dur / paceDiv)));
   while (beats.length > maxN) {
     let bi = 0, bl = Infinity;
     for (let i = 0; i < beats.length - 1; i++) { const l = beats[i].text.length + beats[i + 1].text.length; if (l < bl) { bl = l; bi = i; } }
@@ -754,12 +790,19 @@ function build(S) {
   // look
   const bodyKey = S.body && S.body !== 'auto' ? S.body : arch.body;
   const cap_ = { lean: 2, std: 4, rich: 5 }[S.detail || 'std'];
+  const colorKey = COLOR[S.color] ? S.color : arch.color;
+  const lensOn = !!LENS[S.lens];
   const lookParts = [];
-  for (const k of arch.look) {
-    if (lookParts.length >= cap_) break;
-    const s = k === 'body' ? BODY[bodyKey] : k === 'color' ? COLOR[arch.color] : BLOCK[k];
+  const keys = arch.look.slice();
+  if (COLOR[S.color] && !keys.includes('color')) keys.push('color');
+  for (const k of keys) {
+    if (lookParts.length >= cap_ && !(k === 'color' && COLOR[S.color])) continue;
+    let s = k === 'body' ? BODY[bodyKey] : k === 'color' ? COLOR[colorKey] : BLOCK[k];
+    if (k === 'body' && s && lensOn) s = s.replace(/,? ?\d+mm T[\d.]+/, '').replace(/ with anamorphic lenses.*$/, '');
     if (s) lookParts.push(s);
   }
+  if (lensOn) lookParts.push(LENS[S.lens]);
+  if (PACE[S.pace]) lookParts.push(PACE[S.pace].p);
   const look = (lookParts.length ? dot(lookParts.join('; ')) + ' ' : '') + cap(arch.style);
 
   // light
@@ -1007,6 +1050,8 @@ const T = {
   f_cons: ['Constraints', 'Ограничения'], k1: ['Light', 'Лёгкие'], k2: ['Standard', 'Стандарт'], k3: ['Strict', 'Строгие'],
   f_body: ['Camera body', 'Камера'], b_phone: ['Smartphone', 'Смартфон'], b_none: ['None', 'Нет'],
   f_light: ['Light', 'Свет'], f_move: ['Camera move', 'Движение камеры'],
+  f_color: ['Colour grade', 'Цветокоррекция'], f_pace: ['Pace', 'Темп'], f_lens: ['Lens', 'Объектив'],
+  add_img: ['+ Image', '+ Картинка'], add_vid: ['+ Video', '+ Видео'], add_aud: ['+ Audio', '+ Аудио'],
   c_refs: ['References', 'Референсы'], add_ref: ['+ Add reference', '+ Добавить референс'],
   ph_refnote: ['what it is (optional)', 'что это (необязательно)'],
   refs_hint: ['Every file gets a role and its own sentence. Upload the files in Seedance in this order: @Image1, @Image2, @Video1, @Audio1.',
@@ -1057,11 +1102,18 @@ const EXAMPLES = [
   { n: ['Rooftop chase', 'Погоня по крышам'], ver: '2.0', dur: 12, refs: [{ role: 'character', note: 'the hero' }], sfx: 'footsteps on gravel, distant sirens',
     text: ['Rooftop chase at sunset. The hero sprints along the edge and jumps to the next building. Then he slides under a pipe and rolls to his feet. Finally he faces the villain: "You are too late."',
            'Погоня по крышам на закате. Герой бежит по краю и прыгает на соседнее здание. Затем он проскальзывает под трубой и вскакивает на ноги. В финале он смотрит на злодея: «Ты опоздал.»'] },
+  { n: ['Music video', 'Клип'], ver: '2.5', dur: 10, refs: [{ role: 'music', note: 'the track' }], music: '',
+    text: ['Music video: a singer in a red jacket performs on an empty neon-lit stage. The camera whips to a close-up on the beat. Then dancers join her and the camera orbits the group. Finale: confetti falls as the lights flash.',
+           'Клип: певица в красной куртке выступает на пустой сцене в свете неона. Камера резко переходит на крупный план в такт. Затем к ней присоединяются танцоры, камера облетает группу. В финале падает конфетти, свет вспыхивает.'] },
   { n: ['UGC review', 'UGC-обзор'], ver: '2.5', dur: 8, refs: [], music: '',
     text: ['A young woman in a bright kitchen reviews a coffee machine. She says: "Best purchase this year." Then she presses the button and steam rises.',
            'Девушка на светлой кухне делает обзор кофемашины. Она говорит: «Лучшая покупка за год». Потом нажимает кнопку, и поднимается пар.'] }
 ];
-const BODY_NAMES = { arri: 'ARRI Alexa 35', red: 'RED V-Raptor', sony: 'Sony Venice 2', ana: 'ARRI + anamorphic' };
+const COLOR_NAMES = { teal: ['Teal & orange', 'Тил и оранж'], neutral: ['Neutral', 'Нейтральная'], warm: ['Warm amber', 'Тёплый янтарь'], noir: ['Noir', 'Нуар'],
+  neon: ['Neon', 'Неон'], natural: ['Natural', 'Натуральная'], clean: ['Clean premium', 'Чистый премиум'], anime: ['Anime pastel', 'Аниме'] };
+const PACE_NAMES = { calm: ['Calm', 'Спокойный'], steady: ['Steady', 'Ровный'], fast: ['Fast', 'Быстрый'] };
+const LENS_NAMES = { wide: ['24 mm wide', '24 мм широкий'], std: ['35 mm', '35 мм'], tele: ['85 mm', '85 мм'], macro: ['Macro 100', 'Макро 100'], ana: ['Anamorphic', 'Анаморф'] };
+const BODY_NAMES = { arri: 'Alexa 35', red: 'V-Raptor', sony: 'Venice 2', ana: 'Anamorphic' };
 
 const $ = id => document.getElementById(id);
 const $$ = (sel, r = document) => [...r.querySelectorAll(sel)];
@@ -1080,7 +1132,7 @@ function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.
 function ratioVal() { return $('ratio').value === 'custom' ? $('ratioCustom').value.trim() || 'auto' : $('ratio').value; }
 function readUI() {
   return { ver: VER, text: $('desc').value, dur: +$('durNum').value || 8, ratio: ratioVal(), arch: $('arch').value, detail: $('detail').value, cons: +$('cons').value,
-    body: $('body').value, light: $('light').value, move: $('move').value, refs: REFS.map(r => ({ ...r })), music: $('music').value, sfx: $('sfx').value,
+    body: $('body').value, light: $('light').value, move: $('move').value, color: $('color').value, pace: $('pace').value, lens: $('lens').value, refs: REFS.map(r => ({ ...r })), music: $('music').value, sfx: $('sfx').value,
     dialogue: $('dialogue').value, dlang: $('dlang').value, nosubs: $('nosubs').checked, nobgm: $('nobgm').checked, times: $('times').checked,
     endState: $('endState').checked, brackets: $('brackets').checked, neg: $('neg').value };
 }
@@ -1092,7 +1144,7 @@ function writeUI(s) {
   if (known) { $('ratio').value = s.ratio; $('ratioCustom').hidden = true; }
   else if (s.ratio && s.ratio !== 'auto' && VER === '2.5') { $('ratio').value = 'custom'; $('ratioCustom').hidden = false; $('ratioCustom').value = s.ratio; }
   else $('ratio').value = 'auto';
-  for (const id of ['arch', 'detail', 'body', 'light', 'move', 'dlang']) if (s[id] !== undefined && [...$(id).options].some(o => o.value === String(s[id]))) $(id).value = s[id];
+  for (const id of ['arch', 'detail', 'body', 'light', 'move', 'color', 'pace', 'lens', 'dlang']) if (s[id] !== undefined && [...$(id).options].some(o => o.value === String(s[id]))) $(id).value = s[id];
   if (s.cons) $('cons').value = String(s.cons);
   REFS = (s.refs || []).map(r => ({ role: r.role, note: r.note || '' }));
   for (const id of ['music', 'sfx', 'dialogue', 'neg']) $(id).value = s[id] || '';
@@ -1124,6 +1176,9 @@ function rebuildSelects() {
   fill('arch', o('auto', t('auto')) + ARCH.map(a => o(a.id, L(a.n))).join(''));
   fill('light', o('auto', t('auto')) + Object.keys(LIGHT_NAMES).map(k => o(k, L(LIGHT_NAMES[k]))).join(''));
   fill('body', o('auto', t('auto')) + Object.keys(BODY_NAMES).map(k => o(k, BODY_NAMES[k])).join('') + o('phone', t('b_phone')) + o('none', t('b_none')));
+  fill('color', o('auto', t('auto')) + Object.keys(COLOR_NAMES).map(k => o(k, L(COLOR_NAMES[k]))).join(''));
+  fill('pace', o('auto', t('auto')) + Object.keys(PACE_NAMES).map(k => o(k, L(PACE_NAMES[k]))).join(''));
+  fill('lens', o('auto', t('auto')) + Object.keys(LENS_NAMES).map(k => o(k, L(LENS_NAMES[k]))).join(''));
   fill('move', o('auto', t('auto')) + Object.keys(MOVES).map(k => o(k, L(MOVES[k].n))).join(''));
   const r = $('ratio'); if (r.options[0]) r.options[0].textContent = t('auto');
   if (r.querySelector('option[value=custom]')) r.querySelector('option[value=custom]').textContent = t('custom');
@@ -1143,8 +1198,8 @@ function renderRefs() {
   $('refs').innerHTML = REFS.map((r, i) => {
     const ro = ROLES[r.role] || ROLES.character;
     ctr[ro.kind]++;
-    const opts = ['image', 'video', 'audio'].map(k => `<optgroup label="${esc(t('g_' + k))}">` + roles.filter(([, x]) => x.kind === k).map(([id, x]) => `<option value="${id}"${id === r.role ? ' selected' : ''}>${esc(L(x.l))}</option>`).join('') + '</optgroup>').join('');
-    return `<div class="ref" data-i="${i}"><span class="tok">@${cap(ro.kind)}${ctr[ro.kind]}</span><select aria-label="role">${opts}</select><input type="text" value="${esc(r.note)}" placeholder="${esc(t('ph_refnote'))}"><button type="button" class="x" aria-label="remove">×</button></div>`;
+    const opts = roles.filter(([, x]) => x.kind === ro.kind).map(([id, x]) => `<option value="${id}"${id === r.role ? ' selected' : ''}>${esc(L(x.l))}</option>`).join('');
+    return `<div class="ref" data-i="${i}"><div class="rh"><span class="tok">@${cap(ro.kind)}${ctr[ro.kind]}</span><button type="button" class="x" aria-label="remove">×</button></div><select aria-label="role">${opts}</select><input type="text" value="${esc(r.note)}" placeholder="${esc(t('ph_refnote'))}"></div>`;
   }).join('');
   $('refCount').textContent = REFS.length ? `${REFS.length} / ${LIM[VER].total} ${t('files')}` : '';
 }
@@ -1214,7 +1269,7 @@ function renderExamples() {
 }
 function loadExample(i) {
   const e = EXAMPLES[i];
-  const s = { ...readUI(), ver: e.ver, text: L(e.text), dur: e.dur, refs: e.refs, music: e.music || '', sfx: e.sfx || '', dialogue: '', arch: 'auto', ratio: 'auto', light: 'auto', move: 'auto', body: 'auto', neg: '' };
+  const s = { ...readUI(), ver: e.ver, text: L(e.text), dur: e.dur, refs: e.refs, music: e.music || '', sfx: e.sfx || '', dialogue: '', arch: 'auto', ratio: 'auto', light: 'auto', move: 'auto', body: 'auto', color: 'auto', pace: 'auto', lens: 'auto', neg: '' };
   writeUI(s); render();
 }
 async function copyText(txt) {
@@ -1301,10 +1356,13 @@ function init() {
   $('durNum').addEventListener('input', () => { const v = clamp(+$('durNum').value || 0, LIM[VER].min, LIM[VER].max); if ($('durNum').value) $('dur').value = v; schedule(); });
   $('durNum').addEventListener('change', () => { setDur(+$('durNum').value); schedule(); });
   $('ratio').addEventListener('change', () => { $('ratioCustom').hidden = $('ratio').value !== 'custom'; schedule(); });
-  for (const id of ['desc', 'ratioCustom', 'arch', 'detail', 'cons', 'body', 'light', 'move', 'music', 'sfx', 'dialogue', 'dlang', 'nosubs', 'nobgm', 'times', 'endState', 'brackets', 'neg'])
+  for (const id of ['desc', 'ratioCustom', 'arch', 'detail', 'cons', 'body', 'light', 'move', 'color', 'pace', 'lens', 'music', 'sfx', 'dialogue', 'dlang', 'nosubs', 'nobgm', 'times', 'endState', 'brackets', 'neg'])
     for (const ev of ['input', 'change']) $(id).addEventListener(ev, schedule);
 
-  $('addRef').addEventListener('click', () => { REFS.push({ role: 'character', note: '' }); renderRefs(); render(); });
+  $('addRow').addEventListener('click', e => {
+    const b = e.target.closest('[data-add]'); if (!b) return;
+    REFS.push({ role: { image: 'character', video: 'vmotion', audio: 'music' }[b.dataset.add], note: '' }); renderRefs(); render();
+  });
   $('refs').addEventListener('change', e => { const row = e.target.closest('.ref'); if (row && e.target.tagName === 'SELECT') { REFS[+row.dataset.i].role = e.target.value; renderRefs(); render(); } });
   $('refs').addEventListener('input', e => { const row = e.target.closest('.ref'); if (row && e.target.tagName === 'INPUT') { REFS[+row.dataset.i].note = e.target.value; schedule(); } });
   $('refs').addEventListener('click', e => { if (e.target.classList.contains('x')) { REFS.splice(+e.target.closest('.ref').dataset.i, 1); renderRefs(); render(); } });

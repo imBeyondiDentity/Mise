@@ -2,6 +2,12 @@
 
 # Changelog
 
+## 1.3.0 - 2026-10-08
+
+- New example "Music video · 2.5" (with an audio reference); the four examples now sit in an even 2 × 2 grid.
+- Look & camera gets three new fields: **Colour grade** (eight grades, previously automatic only), **Pace** (calm, steady, fast; limits how many shots the text is split into and adds a pacing phrase) and **Lens** (24, 35, 85 mm, macro, anamorphic; replaces the focal length of the chosen camera body). The grid is now 2 × 4 with no gaps. Camera body names shortened to fit.
+- References rebuilt as cards: tag and remove button on top, role and description at full width below. "+ Add reference" is replaced by three equal chips, "+ Image", "+ Video" and "+ Audio", so tags number themselves (@Image1, @Video1, @Audio1) and the role list shows only roles for that type.
+
 ## 1.2.4 - 2026-10-08
 
 - Chip sizes worked out as one scale: action buttons 40 px, chips and small buttons 34 px, footer chips 40 px. Copy, .txt, .json, Link and Save now share one row at equal size; "Save" is back as a text chip (no star). A one-line hint explains Copy, Link and Save. The "LLM mode" tab is now just "LLM", and the counter reads "1424 chars · 219 words" with the limit on the right.

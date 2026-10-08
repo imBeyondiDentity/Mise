@@ -22,7 +22,14 @@ Everything runs in your browser. No server, no uploads, no account, no API key. 
 - **Improve my prompt:** paste any prompt to get a score, a list of problems and one-click fixes (strip empty words, add constraints).
 - **History:** saved prompts with favourites, reopen and copy. Stored in your browser only.
 
-Other features: RU/EN interface, Seedance 2.0/2.5 switch, references with roles (`@Image1`, `@Video1`, `@Audio1`), music, sound effects and dialogue, aspect ratio including custom ratios for 2.5, timeline view, `.txt` and `.json` export, and shareable links.
+## Controls
+
+- **Scene type, aspect ratio and duration.** Auto by default; every choice can be overridden.
+- **Look and camera.** Eight optional controls: look detail, constraints, camera body, light, camera move, colour grade (eight grades), pace (calm, steady, fast; limits how many shots the text is split into) and lens (24, 35, 85 mm, macro, anamorphic). Leave any on Auto and the engine decides.
+- **References.** Add images, videos and audio with the "+ Image", "+ Video" and "+ Audio" chips. Tags number themselves and each file gets a role (character, product, location, style, first or last frame, motion, music, voice and so on).
+- **Examples.** Four ready briefs (perfume ad, rooftop chase, music video, UGC review) to see how it works.
+
+Other features: RU/EN interface, Seedance 2.0/2.5 switch, music, sound effects and dialogue, aspect ratio including custom ratios for 2.5, timeline view, `.txt` and `.json` export, and shareable links.
 
 ## Version differences
 
@@ -50,6 +57,14 @@ LICENSE        MIT
 
 Open `index.html` in any modern browser. No build step, no dependencies. The fonts load from Google Fonts when online and fall back to system fonts offline.
 
+## Publishing on GitHub Pages
+
+1. Create a repository (for example `MiSE`) and push the files to the `main` branch.
+2. Open *Settings*, then *Pages*.
+3. Under *Build and deployment* choose *Deploy from a branch*, branch `main`, folder `/ (root)`.
+4. After a minute the site is live at `https://<username>.github.io/Mise/`.
+
+The footer carries two chips: "Github" (left) opens the repository (`https://github.com/imBeyondiDentity/Mise`) and "Contact" / "Написать" (right) opens an email to `imbeyondidentity@gmail.com`, with the project name and orange dots between them. Change the `href` of `#backLink` or `#mailLink` if either moves.
 
 ## Limitations
 
