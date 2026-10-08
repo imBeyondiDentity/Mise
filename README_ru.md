@@ -42,6 +42,7 @@ README.md      английская версия
 README_ru.md   этот файл
 CHANGELOG.md   история
 MiSE_guide.pdf объяснение простыми словами (RU + EN)
+MiSE_icon.svg, .png фирменная иконка (она же встроена в index.html)
 LICENSE        MIT
 ```
 
@@ -56,7 +57,7 @@ LICENSE        MIT
 3. В *Build and deployment* выбери *Deploy from a branch*, ветка `main`, папка `/ (root)`.
 4. Через минуту сайт заработает по адресу `https://<username>.github.io/Mise/`.
 
-Чип «Github» справа внизу открывает репозиторий (`https://github.com/imBeyondiDentity/Mise`). Если репозиторий лежит в другом месте, поменяй `href` у `#backLink`.
+В подвале два чипа: «Github» слева открывает репозиторий (`https://github.com/imBeyondiDentity/Mise`), «Написать» справа открывает письмо на `imbeyondidentity@gmail.com`, а между ними название проекта и оранжевые точки. Если что-то переедет, поменяй `href` у `#backLink` или `#mailLink`.
 
 ## Ограничения
 

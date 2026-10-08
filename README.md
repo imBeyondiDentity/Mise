@@ -42,6 +42,7 @@ README.md      this file
 README_ru.md   Russian version
 CHANGELOG.md   history
 MiSE_guide.pdf plain-words guide (RU + EN)
+MiSE_icon.svg, .png brand icon (also embedded in index.html)
 LICENSE        MIT
 ```
 
@@ -49,7 +50,14 @@ LICENSE        MIT
 
 Open `index.html` in any modern browser. No build step, no dependencies. The fonts load from Google Fonts when online and fall back to system fonts offline.
 
+## Publishing on GitHub Pages
 
+1. Create a repository (for example `MiSE`) and push the files to the `main` branch.
+2. Open *Settings*, then *Pages*.
+3. Under *Build and deployment* choose *Deploy from a branch*, branch `main`, folder `/ (root)`.
+4. After a minute the site is live at `https://<username>.github.io/Mise/`.
+
+The footer carries two chips: "Github" (left) opens the repository (`https://github.com/imBeyondiDentity/Mise`) and "Contact" / "Написать" (right) opens an email to `imbeyondidentity@gmail.com`, with the project name and orange dots between them. Change the `href` of `#backLink` or `#mailLink` if either moves.
 
 ## Limitations
 
