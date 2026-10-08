@@ -11,6 +11,7 @@
 - Replaced the native drop-downs with custom faces (the system list still opens on tap), because Safari kept repainting them grey with a giant arrow. Footer now shows the version (v1.2.2).
 - Footer rebuilt as in the other projects: the chips are part of the page (no longer floating), "Github" on the left, "Contact" ("Написать") on the right linking to the author's email, and the project name MiSE with orange dots between them.
 - Language switch pinned to the header (scrolls with the page instead of floating), as in the other projects.
+- The "Model" label now sits centred above the version switch.
 
 ## 1.1.0 - 2026-10-08
 
