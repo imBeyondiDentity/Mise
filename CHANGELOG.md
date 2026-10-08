@@ -9,6 +9,8 @@
 - Re-wrapped `LICENSE` to short lines so it no longer scrolls sideways on phones.
 - Rebuilt the drop-down styling as a single background rule with an inline arrow icon (the previous fix still showed system-grey lists with an oversized arrow on iPhone).
 - Replaced the native drop-downs with custom faces (the system list still opens on tap), because Safari kept repainting them grey with a giant arrow. Footer now shows the version (v1.2.2).
+- Footer rebuilt as in the other projects: the chips are part of the page (no longer floating), "Github" on the left, "Contact" ("Написать") on the right linking to the author's email, and the project name MiSE with orange dots between them.
+- Language switch pinned to the header (scrolls with the page instead of floating), as in the other projects.
 
 ## 1.1.0 - 2026-10-08
 

@@ -17,13 +17,13 @@
 }
 *{box-sizing:border-box}
 html{color-scheme:dark;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--mono);-webkit-font-smoothing:antialiased;padding-bottom:84px}
-.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--mono);-webkit-font-smoothing:antialiased;padding-bottom:0}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px;position:relative}
 header{padding:56px 0 20px;text-align:center}
 .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
 h1{font:700 clamp(36px,7vw,68px)/1.05 var(--serif);margin:0 0 30px;letter-spacing:-.01em}
 .sub{max-width:720px;color:var(--mute);margin:0 0 26px;font-size:13.5px}
-.lang{position:fixed;top:14px;right:14px;z-index:20;display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
+.lang{position:absolute;top:18px;right:16px;z-index:20;display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
 .lang button{all:unset;cursor:pointer;font-size:11px;letter-spacing:.1em;padding:5px 12px;border-radius:999px;color:var(--mute)}
 .lang button[aria-pressed=true]{background:var(--acc);color:#120a04;font-weight:700}
 .bar{justify-content:center;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
@@ -101,8 +101,6 @@ pre.out{margin:0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.65 var
 .badge{border:1px solid var(--acc);color:var(--acc);border-radius:6px;padding:1px 7px;font-size:10.5px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--acc);color:#120a04;font-weight:700;font-size:12.5px;padding:9px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.2s;z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-.back{position:fixed;right:16px;bottom:16px;z-index:10;background:var(--card);border:1px solid var(--line);color:var(--mute);text-decoration:none;font-size:12px;padding:8px 14px;border-radius:999px}
-.back:hover{color:var(--acc);border-color:var(--acc)}
 .foot{color:var(--mute);font-size:11.5px;padding:10px 0 30px;max-width:760px}
 [hidden]{display:none!important}
 ::selection{background:var(--acc);color:#120a04}
@@ -112,15 +110,22 @@ input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 @media(max-width:700px){textarea,input[type=text],input[type=number],select{font-size:16px}}
 
+.end .chip{color:var(--acc);font-size:13px;padding:9px 18px}
+@media(max-width:700px){header{padding-top:76px}}
+.end{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:22px 0 calc(34px + env(safe-area-inset-bottom,0px));color:var(--mute);font-size:12px}
+.end .brand{text-align:center;white-space:nowrap}
+.end .brand i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-right:8px;vertical-align:middle;font-style:normal}
+.end .brand i.right{margin-right:0;margin-left:8px}
+.end .chip{flex:none}
+
 </style>
 </head>
 <body>
+<main class="wrap">
 <div class="lang" role="group" aria-label="Language">
   <button type="button" data-l="en" aria-pressed="true">EN</button>
   <button type="button" data-l="ru" aria-pressed="false">RU</button>
 </div>
-
-<main class="wrap">
   <header>
     <p class="kicker" data-t="kicker"></p>
     <h1 id="title">MiSE</h1>
@@ -265,9 +270,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </section>
 
   <p class="foot" data-t="foot"></p>
+  <footer class="end">
+    <a class="chip" id="backLink" href="https://github.com/imBeyondiDentity/Mise" target="_blank" rel="noopener" data-t="back"></a>
+    <span class="brand"><i></i>MiSE<i class="right"></i></span>
+    <a class="chip" id="mailLink" href="mailto:imbeyondidentity@gmail.com" data-t="write"></a>
+  </footer>
 </main>
 
-<a class="back" id="backLink" href="https://github.com/imBeyondiDentity/Mise" target="_blank" rel="noopener" data-t="back"></a>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -1003,8 +1012,9 @@ const T = {
   h_only_fav: ['Favourites only', 'Только избранное'], h_load: ['Open', 'Открыть'], h_del: ['Delete', 'Удалить'], h_clear: ['Clear all', 'Очистить всё'],
   h_fav: ['★', '★'], h_confirm: ['Delete the whole history?', 'Удалить всю историю?'],
   back: ['Github', 'Github'],
-  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser. v1.2.2',
-         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер. v1.2.2']
+  write: ['Contact', 'Написать'],
+  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser. v1.2.4',
+         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер. v1.2.4']
 };
 const EXAMPLES = [
   { n: ['Perfume ad', 'Реклама духов'], ver: '2.5', dur: 10, refs: [{ role: 'product', note: '' }], music: 'soft piano, slow build',
