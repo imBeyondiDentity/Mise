@@ -12,6 +12,7 @@
 - Footer rebuilt as in the other projects: the chips are part of the page (no longer floating), "Github" on the left, "Contact" ("Написать") on the right linking to the author's email, and the project name MiSE with orange dots between them.
 - Language switch pinned to the header (scrolls with the page instead of floating), as in the other projects.
 - The "Model" label now sits centred above the version switch.
+- Version tag (v1.2.7) moved from the footer into the top-left corner of the header, mirroring the language switch.
 - Added the brand icon: orange viewfinder corners with a play mark on the dark rounded square. Embedded in the page as the favicon and the iPhone home-screen icon; `MiSE_icon.svg` and `MiSE_icon.png` (512 px) added for reuse.
 
 ## 1.1.0 - 2026-10-08

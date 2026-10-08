@@ -124,10 +124,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .bar .lbl{margin:0}
 .bar{flex-direction:column;gap:16px}
 
+.vtag{position:absolute;top:18px;left:16px;z-index:20;display:flex;align-items:center;height:36px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:0 14px;font-size:11px;letter-spacing:.1em;color:var(--mute);user-select:none}
+
 </style>
 </head>
 <body>
 <main class="wrap">
+<div class="vtag" title="MiSE">v1.2.7</div>
 <div class="lang" role="group" aria-label="Language">
   <button type="button" data-l="en" aria-pressed="true">EN</button>
   <button type="button" data-l="ru" aria-pressed="false">RU</button>
@@ -1019,8 +1022,8 @@ const T = {
   h_fav: ['★', '★'], h_confirm: ['Delete the whole history?', 'Удалить всю историю?'],
   back: ['Github', 'Github'],
   write: ['Contact', 'Написать'],
-  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser. v1.2.6',
-         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер. v1.2.6']
+  foot: ['Rules come from the official Seedance guides, community practice and a physical-lighting / anti-"plastic" vocabulary. The engine suggests; the model still decides. Nothing leaves your browser',
+         'Правила собраны из официальных гайдов Seedance, практики сообщества и словаря физического света и «анти-пластика». Движок предлагает, решает всё равно модель. Ничего не покидает твой браузер']
 };
 const EXAMPLES = [
   { n: ['Perfume ad', 'Реклама духов'], ver: '2.5', dur: 10, refs: [{ role: 'product', note: '' }], music: 'soft piano, slow build',
