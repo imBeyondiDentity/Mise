@@ -4,8 +4,8 @@
 
 ## 1.2.0 - 2026-10-08
 
-- The bottom-right chip now reads "Github" and opens the repository `imBeyondiDentity/MiSE` in a new tab (it used to be "← iDentity" pointing to `../`).
-- Fixed the GitHub Pages address in README, README_ru and the PDF guide to match the real repository name (`/MiSE/`).
+- The bottom-right chip now reads "Github" and opens the repository `imBeyondiDentity/Mise` in a new tab (it used to be "← iDentity" pointing to `../`).
+- Fixed the GitHub Pages address in README, README_ru and the PDF guide to match the real repository name (`/Mise/`).
 - Re-wrapped `LICENSE` to short lines so it no longer scrolls sideways on phones.
 
 ## 1.1.0 - 2026-10-08

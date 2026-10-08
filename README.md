@@ -1,7 +1,7 @@
 # MiSE
 
 [![Licence: MIT](https://img.shields.io/badge/Licence-MIT-yellow.svg)](LICENSE)
-[![Open MiSE](https://img.shields.io/badge/Open-MiSE-ff6a1a?style=flat)](https://imbeyondidentity.github.io/MiSE/)
+[![Open MiSE](https://img.shields.io/badge/Open-MiSE-ff6a1a?style=flat)](https://imbeyondidentity.github.io/Mise/)
 
 [Русская версия](README_ru.md)
 
@@ -54,9 +54,9 @@ Open `index.html` in any modern browser. No build step, no dependencies. The fon
 1. Create a repository (for example `MiSE`) and push the files to the `main` branch.
 2. Open *Settings*, then *Pages*.
 3. Under *Build and deployment* choose *Deploy from a branch*, branch `main`, folder `/ (root)`.
-4. After a minute the site is live at `https://<username>.github.io/MiSE/`.
+4. After a minute the site is live at `https://<username>.github.io/Mise/`.
 
-The "Github" chip in the bottom-right corner opens the repository (`https://github.com/imBeyondiDentity/MiSE`). Change the `href` of `#backLink` if the repository lives elsewhere.
+The "Github" chip in the bottom-right corner opens the repository (`https://github.com/imBeyondiDentity/Mise`). Change the `href` of `#backLink` if the repository lives elsewhere.
 
 ## Limitations
 

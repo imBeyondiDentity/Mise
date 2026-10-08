@@ -1,7 +1,7 @@
 # MiSE
 
 [![Licence: MIT](https://img.shields.io/badge/Licence-MIT-yellow.svg)](LICENSE)
-[![Open MiSE](https://img.shields.io/badge/Open-MiSE-ff6a1a?style=flat)](https://imbeyondidentity.github.io/MiSE/)
+[![Open MiSE](https://img.shields.io/badge/Open-MiSE-ff6a1a?style=flat)](https://imbeyondidentity.github.io/Mise/)
 
 [English version](README.md)
 
@@ -54,9 +54,9 @@ LICENSE        MIT
 1. Создай репозиторий (например `MiSE`) и залей файлы в ветку `main`.
 2. Открой *Settings*, затем *Pages*.
 3. В *Build and deployment* выбери *Deploy from a branch*, ветка `main`, папка `/ (root)`.
-4. Через минуту сайт заработает по адресу `https://<username>.github.io/MiSE/`.
+4. Через минуту сайт заработает по адресу `https://<username>.github.io/Mise/`.
 
-Чип «Github» справа внизу открывает репозиторий (`https://github.com/imBeyondiDentity/MiSE`). Если репозиторий лежит в другом месте, поменяй `href` у `#backLink`.
+Чип «Github» справа внизу открывает репозиторий (`https://github.com/imBeyondiDentity/Mise`). Если репозиторий лежит в другом месте, поменяй `href` у `#backLink`.
 
 ## Ограничения
 
